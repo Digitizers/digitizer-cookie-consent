@@ -23,6 +23,11 @@ dpt_test_ok( ! array_key_exists( 'scripts', $cfg ) && ! array_key_exists( 'block
 $js = (string) file_get_contents( dirname( __DIR__ ) . '/assets/js/frontend.js' );
 dpt_test_ok( false === strpos( $js, 'innerHTML = html' ) && false === strpos( $js, 'appendExecutable' ), 'frontend.js no longer builds scripts from stored HTML' );
 
+$watch = substr( $js, (int) strpos( $js, 'function watchTaggedScripts' ), 900 );
+dpt_test_ok( false !== strpos( $watch, 'new MutationObserver' ) && false !== strpos( $watch, 'activateTaggedScripts(readConsent())' ), 'a tagged script added later - by Tag Manager, say - is run too, under the stored choice' );
+$init = substr( $js, (int) strpos( $js, 'function init()' ) );
+dpt_test_ok( false !== strpos( $init, 'watchTaggedScripts();' ), 'and the page is watched from load' );
+
 $node = trim( (string) shell_exec( 'command -v node 2>/dev/null' ) );
 $start = strpos( $js, '    var injectedCats' );
 $end   = strpos( $js, '    // Google Consent Mode v2' );

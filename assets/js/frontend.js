@@ -216,6 +216,26 @@
         processActivateQueue();
     }
 
+    // A tagged script added after load - by Tag Manager or a lazy loader -
+    // runs too, under the stored choice. One observer, from init on.
+    var tagWatcher = null;
+    function watchTaggedScripts() {
+        if (tagWatcher || typeof MutationObserver !== 'function') return;
+        tagWatcher = new MutationObserver(function (mutations) {
+            for (var i = 0; i < mutations.length; i++) {
+                var added = mutations[i].addedNodes;
+                for (var j = 0; j < added.length; j++) {
+                    var n = added[j];
+                    if (n.nodeType === 1 && (n.matches && n.matches('script[data-dpt-cb-category]') || n.querySelector && n.querySelector('script[data-dpt-cb-category]'))) {
+                        activateTaggedScripts(readConsent());
+                        return;
+                    }
+                }
+            }
+        });
+        try { tagWatcher.observe(document.documentElement, { childList: true, subtree: true }); } catch (e) { tagWatcher = null; }
+    }
+
     // A category counts only if the visitor allowed it and it is still
     // offered: switched off since, its stored "yes" grants nothing.
     function granted(consent, cat) {
@@ -394,8 +414,9 @@
         var preResolved = document.documentElement.getAttribute('data-dpt-cb-resolved') === '1';
         var shouldShow  = (!existing && !preResolved) || forceOpen;
 
-        // Consented snippets are client-injected on every page load (the
-        // server never bakes them into cacheable HTML).
+        // Tagged scripts run here, on every page load, from this visitor's
+        // own choice - including ones added later.
+        watchTaggedScripts();
         if (existing) {
             // Again here, in case the head precheck could not read the choice
             // (a store it rejected that readConsent() repaired). The same
