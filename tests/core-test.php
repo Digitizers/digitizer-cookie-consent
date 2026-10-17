@@ -38,6 +38,11 @@ $o = get_option( 'digitizer_cookie_consent' );
 dpt_test_eq( array( $o['block_scripts'], $o['cat_marketing_enabled'], $o['consent_mode'], $o['consent_days'], $o['bg_color'], $o['policy_url'] ), array( '0', '0', '1', '365', '#123456', 'https://example.test/p/' ), 'every setting comes across: switches, categories, Consent Mode, lifetime, design, policy link' );
 dpt_test_ok( isset( $GLOBALS['dpt_stub_options']['dpt_cookie_banner'] ), 'the module\'s option is left alone' );
 
+/* Text read from the database is not slashed: a backslash in it survives. */
+$GLOBALS['dpt_stub_options'] = array( 'dpt_cookie_banner' => array( 'texts' => array( 'en' => array( 'message' => 'Files in C:\\docs' ) ) ) );
+Digitizer_Cookie_Consent_Core::activate( false );
+dpt_test_eq( get_option( 'digitizer_cookie_consent' )['texts']['en']['message'], 'Files in C:\\docs', 'a backslash in a stored text comes across - the import does not unslash database values' );
+
 /* A fresh site: defaults, not saved. */
 $GLOBALS['dpt_stub_options'] = array();
 Digitizer_Cookie_Consent_Core::activate( false );

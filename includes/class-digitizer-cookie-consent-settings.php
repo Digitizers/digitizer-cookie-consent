@@ -828,7 +828,10 @@ class Digitizer_Cookie_Consent_Settings {
 			}
 		}
 		// Texts are sanitised against $base, which now holds every source language.
-		$clean              = self::sanitize( $theirs, $base );
+		// sanitize() expects slashed request data and unslashes it; a value
+		// read from the database is not slashed, so it is slashed first, or a
+		// backslash in a text ("C:\docs") would be lost.
+		$clean              = self::sanitize( wp_slash( $theirs ), $base );
 		$clean['languages'] = $base['languages'];
 		if ( isset( $theirs['default_lang'] ) && in_array( $theirs['default_lang'], $clean['languages'], true ) ) {
 			$clean['default_lang'] = $theirs['default_lang'];
