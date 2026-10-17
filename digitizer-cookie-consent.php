@@ -27,6 +27,11 @@ define( 'DIGITIZER_COOKIE_CONSENT_URL', plugin_dir_url( __FILE__ ) );
 
 require_once DIGITIZER_COOKIE_CONSENT_PATH . 'includes/class-digitizer-cookie-consent-settings.php';
 require_once DIGITIZER_COOKIE_CONSENT_PATH . 'includes/class-digitizer-cookie-consent-frontend.php';
+require_once DIGITIZER_COOKIE_CONSENT_PATH . 'includes/class-digitizer-cookie-consent-core.php';
 if ( is_admin() ) {
 	require_once DIGITIZER_COOKIE_CONSENT_PATH . 'includes/class-digitizer-cookie-consent-admin.php';
 }
+
+register_activation_hook( __FILE__, array( 'Digitizer_Cookie_Consent_Core', 'activate' ) );
+register_deactivation_hook( __FILE__, array( 'Digitizer_Cookie_Consent_Core', 'deactivate' ) );
+add_action( 'plugins_loaded', array( 'Digitizer_Cookie_Consent_Core', 'boot' ) );

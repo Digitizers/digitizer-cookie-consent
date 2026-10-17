@@ -37,8 +37,8 @@ class Digitizer_Cookie_Consent_Frontend {
 		// that needs consent runs before the visitor says yes. Only with the
 		// banner on - an opt-in manager with no banner would leave every
 		// category denied for good, since nobody could ever say yes.
-		if ( '1' === Digitizer_Cookie_Consent_Settings::get( 'wp_consent_api' ) && self::signals_possible( Digitizer_Cookie_Consent_Settings::all() ) && defined( 'DPT_BASENAME' ) ) {
-			add_filter( 'wp_consent_api_registered_' . DPT_BASENAME, '__return_true' );
+		if ( '1' === Digitizer_Cookie_Consent_Settings::get( 'wp_consent_api' ) && self::signals_possible( Digitizer_Cookie_Consent_Settings::all() ) && defined( 'DIGITIZER_COOKIE_CONSENT_FILE' ) ) {
+			add_filter( 'wp_consent_api_registered_' . plugin_basename( DIGITIZER_COOKIE_CONSENT_FILE ), '__return_true' );
 			add_filter( 'wp_get_consent_type', array( __CLASS__, 'consent_type' ) );
 			add_filter( 'wp_has_consent', array( $this, 'filter_wp_has_consent' ), 10, 3 );
 		}
@@ -227,7 +227,10 @@ class Digitizer_Cookie_Consent_Frontend {
 		 *
 		 * @param string $selector Default Digitizer_Cookie_Consent_Frontend::OPEN_SELECTOR.
 		 */
-		return trim( (string) apply_filters( 'digitizer_cookie_consent_open_selector', self::OPEN_SELECTOR ) );
+		$selector = (string) apply_filters( 'digitizer_cookie_consent_open_selector', self::OPEN_SELECTOR );
+		// The module's filter name, so site code written against Digitizer
+		// Pro Tools keeps its way to reopen the banner.
+		return trim( (string) apply_filters( 'dpt_cb_open_selector', $selector ) );
 	}
 
 	public function rocket_exclude_files( $excluded ) {
@@ -284,6 +287,7 @@ class Digitizer_Cookie_Consent_Frontend {
 	 */
 	public function lang_dir( $lang ) {
 		$rtl   = apply_filters( 'digitizer_cookie_consent_rtl_langs', array( 'he', 'ar', 'fa', 'ur', 'yi' ) );
+		$rtl   = apply_filters( 'dpt_cb_rtl_langs', $rtl ); // The module's name, for existing site code.
 		$short = strtolower( substr( $lang, 0, (int) strcspn( $lang, '_-' ) ) );
 		return in_array( $short, $rtl, true ) ? 'rtl' : 'ltr';
 	}
@@ -1197,6 +1201,10 @@ class Digitizer_Cookie_Consent_Frontend {
 							<button type="button" class="dpt-cb-btn dpt-cb-btn-settings" data-dpt-cb-action="show-settings"><?php echo esc_html( $t['btn_settings_text'] ); ?></button>
 						<?php endif; ?>
 					</div>
+					<?php if ( '1' === $o['credit'] ) : ?>
+						<?php // Opt-in only (directory guideline 10): off unless the site switched it on. ?>
+						<p class="dpt-cb-credit"><a href="https://www.digitizer.studio" target="_blank" rel="noopener"><?php esc_html_e( 'Cookie consent by Digitizer', 'digitizer-cookie-consent' ); ?></a></p>
+					<?php endif; ?>
 				</div>
 
 				<div class="dpt-cb-settings-view" style="display:none;">

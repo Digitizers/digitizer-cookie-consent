@@ -26,6 +26,12 @@ class Digitizer_Cookie_Consent_Settings {
 			// plugins that read the WP Consent API. Off until a site asks for it:
 			// switching Consent Mode on starts every Google tag on "denied".
 			'consent_mode'       => '0',
+			// "Cookie consent by Digitizer" under the buttons. Off: a
+			// front-end credit is opt-in only (directory guideline 10).
+			'credit'             => '0',
+			// Set by the first save; until then wp-admin says the banner is
+			// live with the default texts.
+			'saved'              => '0',
 			'wp_consent_api'     => '0',
 
 			// Multilingual.
@@ -686,6 +692,35 @@ class Digitizer_Cookie_Consent_Settings {
 			$clean['languages'] = $existing['languages'];
 		}
 		$before = $clean;
+		$clean  = self::sanitize( $raw, $clean );
+		// Saved once: the first-save notice goes.
+		$clean['saved'] = '1';
+
+		update_option( self::OPTION, $clean );
+
+		// Every module setting shapes the rendered/cached HTML (precheck
+		// version, banner markup, raw snippets when blocking is off, the
+		// localized config...), so any actual change must invalidate the
+		// page caches - otherwise stale pages keep the old behavior, e.g.
+		// keep running tags after block_scripts was switched on.
+		if ( $clean != $before ) {
+			self::purge_page_caches();
+		}
+		return true;
+	}
+
+	/**
+	 * Sanitise submitted settings over a starting option, and return the
+	 * result without writing it. save() and the import from Digitizer Pro
+	 * Tools both go through here.
+	 *
+	 * @param array $raw  Submitted values.
+	 * @param array $base The option to start from (defaults merged in).
+	 * @return array
+	 */
+	public static function sanitize( array $raw, array $base ) {
+		$defaults = self::defaults();
+		$clean    = $base;
 
 		// Script fields (allow full script tags for trusted admins).
 		$script_fields = array( 'scripts_functional', 'scripts_analytics', 'scripts_marketing' );
@@ -710,7 +745,7 @@ class Digitizer_Cookie_Consent_Settings {
 		// Checkbox fields.
 		$checkbox_fields = array(
 			'enabled', 'show_on_mobile', 'auto_accept_scroll', 'block_scripts',
-			'consent_mode', 'wp_consent_api',
+			'consent_mode', 'wp_consent_api', 'credit',
 			'box_shadow', 'overlay_enabled',
 			'title_shadow_enabled', 'content_shadow_enabled',
 			'show_close',
@@ -762,17 +797,48 @@ class Digitizer_Cookie_Consent_Settings {
 			}
 		}
 
-		update_option( self::OPTION, $clean );
+		return $clean;
+	}
 
-		// Every module setting shapes the rendered/cached HTML (precheck
-		// version, banner markup, raw snippets when blocking is off, the
-		// localized config...), so any actual change must invalidate the
-		// page caches - otherwise stale pages keep the old behavior, e.g.
-		// keep running tags after block_scripts was switched on.
-		if ( $clean != $before ) {
-			self::purge_page_caches();
+	/**
+	 * The module's option, as a site moving from Digitizer Pro Tools has it,
+	 * made into this plugin's. Everything comes across: the languages a site
+	 * added (save() ignores the list, and its text sanitiser keeps only the
+	 * destination's languages), the default language, and the snippets as
+	 * stored - they were checked when they were saved, and sanitize() would
+	 * strip their <script> tags for a user without unfiltered_html.
+	 *
+	 * @param array $theirs The module's option.
+	 * @return array
+	 */
+	public static function sanitize_import( array $theirs ) {
+		$base  = self::defaults();
+		$langs = array();
+		foreach ( (array) ( isset( $theirs['languages'] ) ? $theirs['languages'] : array() ) as $code ) {
+			$code = self::normalize_lang_code( (string) $code );
+			if ( $code && ! in_array( $code, $langs, true ) ) {
+				$langs[] = $code;
+			}
 		}
-		return true;
+		if ( $langs ) {
+			$base['languages'] = $langs;
+			$base['texts']     = array();
+			foreach ( $langs as $code ) {
+				$base['texts'][ $code ] = self::default_texts( $code );
+			}
+		}
+		// Texts are sanitised against $base, which now holds every source language.
+		$clean              = self::sanitize( $theirs, $base );
+		$clean['languages'] = $base['languages'];
+		if ( isset( $theirs['default_lang'] ) && in_array( $theirs['default_lang'], $clean['languages'], true ) ) {
+			$clean['default_lang'] = $theirs['default_lang'];
+		}
+		foreach ( array( 'scripts_functional', 'scripts_analytics', 'scripts_marketing' ) as $key ) {
+			if ( isset( $theirs[ $key ] ) && is_string( $theirs[ $key ] ) ) {
+				$clean[ $key ] = $theirs[ $key ];
+			}
+		}
+		return $clean;
 	}
 
 	/**
@@ -799,6 +865,7 @@ class Digitizer_Cookie_Consent_Settings {
 		do_action( 'litespeed_purge_all' ); // LiteSpeed Cache (no-op when absent).
 		do_action( 'breeze_clear_all_cache' ); // Breeze (Cloudways), likewise.
 		do_action( 'digitizer_cookie_consent_purge_caches' ); // Custom hosts/CDNs can hook here.
+		do_action( 'dpt_cb_purge_caches' ); // The module's name, for site code written against it.
 	}
 
 	/**

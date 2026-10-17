@@ -346,3 +346,7 @@
     #dpt-cb-banner .dpt-cb-buttons { flex-direction: column; }
     #dpt-cb-banner .dpt-cb-btn { width: 100%; text-align: center; }
 }
+
+/* Opt-in credit under the buttons. */
+#dpt-cb-banner .dpt-cb-credit { margin: 10px 0 0; font-size: 11px; opacity: .7; text-align: center; }
+#dpt-cb-banner .dpt-cb-credit a { color: inherit; }

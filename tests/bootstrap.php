@@ -1382,3 +1382,25 @@ function wp_add_inline_style( $handle, $css ) { $GLOBALS['dpt_stub_inline_styles
 if ( ! function_exists( 'wp_enqueue_script' ) ) { function wp_enqueue_script( $h, $src = '', $deps = array(), $ver = false, $footer = false ) { $GLOBALS['dpt_stub_scripts'][ $h ] = $deps; } }
 if ( ! function_exists( 'wp_localize_script' ) ) { function wp_localize_script( $h, $name, $data ) { $GLOBALS['dpt_stub_localized'][ $h ] = array( $name, $data ); return true; } }
 if ( ! function_exists( 'wp_is_mobile' ) ) { function wp_is_mobile() { return false; } }
+function plugin_basename( $f ) { return basename( dirname( $f ) ) . '/' . basename( $f ); }
+
+// Lifecycle stubs for the standalone's core and uninstall.
+if ( ! function_exists( 'add_option' ) ) {
+	function add_option( $name, $value = '' ) {
+		if ( isset( $GLOBALS['dpt_stub_options'][ $name ] ) ) { return false; }
+		$GLOBALS['dpt_stub_options'][ $name ] = $value;
+		return true;
+	}
+}
+if ( ! function_exists( 'delete_option' ) ) {
+	function delete_option( $name ) { unset( $GLOBALS['dpt_stub_options'][ $name ] ); return true; }
+}
+if ( ! function_exists( 'get_sites' ) ) { function get_sites( $args = array() ) { return array(); } }
+if ( ! function_exists( 'switch_to_blog' ) ) { function switch_to_blog( $id ) { return true; } }
+if ( ! function_exists( 'restore_current_blog' ) ) { function restore_current_blog() { return true; } }
+if ( ! function_exists( 'get_bloginfo' ) ) { function get_bloginfo( $show = '' ) { return 'version' === $show ? '6.8' : ''; } }
+if ( ! function_exists( 'sanitize_hex_color' ) ) {
+	function sanitize_hex_color( $c ) { return preg_match( '/^#([A-Fa-f0-9]{3}){1,2}$/', (string) $c ) ? (string) $c : null; }
+}
+if ( ! function_exists( 'get_locale' ) ) { function get_locale() { return isset( $GLOBALS['dpt_stub_locale'] ) ? $GLOBALS['dpt_stub_locale'] : 'he_IL'; } }
+if ( ! function_exists( 'esc_html_e' ) ) { function esc_html_e( $t, $d = null ) { echo esc_html( $t ); } }

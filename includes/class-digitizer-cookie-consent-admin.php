@@ -331,6 +331,13 @@ class Digitizer_Cookie_Consent_Admin {
 				</td>
 			</tr>
 			<tr>
+				<th><?php esc_html_e( 'Credit', 'digitizer-cookie-consent' ); ?></th>
+				<td>
+					<?php $this->switch_field( 'credit', $o['credit'] ); ?>
+					<p class="description"><?php esc_html_e( 'Show "Cookie consent by Digitizer" under the buttons', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
 				<th><?php esc_html_e( 'Google Consent Mode v2', 'digitizer-cookie-consent' ); ?></th>
 				<td>
 					<?php $this->switch_field( 'consent_mode', $o['consent_mode'] ); ?>
