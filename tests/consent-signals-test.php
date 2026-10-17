@@ -45,7 +45,7 @@ function dpt_test_cs_run( $html, $cookie, $local = null ) {
 	if ( null === $node ) {
 		$node = trim( (string) shell_exec( 'command -v node 2>/dev/null' ) );
 	}
-	if ( '' === $node || ! preg_match( '#<script id="dpt-cb-precheck"[^>]*>(.*?)</script>#s', $html, $m ) ) {
+	if ( '' === $node || ! preg_match( '#<script id="digitizer-cookie-consent-precheck"[^>]*>(.*?)</script>#s', $html, $m ) ) {
 		return null;
 	}
 	$harness = 'var window = {}; var document = { cookie: ' . json_encode( $cookie ) . ', documentElement: { setAttribute: function(){} } };'

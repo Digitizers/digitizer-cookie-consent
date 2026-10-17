@@ -304,8 +304,10 @@ class Digitizer_Cookie_Consent_Frontend {
 		// every Google tag on the site would stay denied for good.
 		$o            = Digitizer_Cookie_Consent_Settings::all();
 		$consent_mode = '1' === $o['consent_mode'] && $this->is_active() && self::signals_possible( $o );
+		// The script body is built here, then printed through
+		// wp_print_inline_script_tag(): never a raw <script>.
+		ob_start();
 		?>
-		<script id="dpt-cb-precheck" data-no-defer data-cfasync="false">
 		<?php
 		// Deleting a denied category's cookies, here rather than in
 		// frontend.js: this runs first in <head>, before any tag that could
@@ -424,12 +426,38 @@ class Digitizer_Cookie_Consent_Frontend {
 				document.documentElement.setAttribute('data-dpt-cb-resolved', '1');
 			} catch(e) { /* swallow */ }
 		})();
-		</script>
-		<style id="dpt-cb-precheck-css">
-			html[data-dpt-cb-resolved="1"] #dpt-cb-banner,
-			html[data-dpt-cb-resolved="1"] #dpt-cb-overlay { display: none !important; }
-		</style>
 		<?php
+		$js = (string) ob_get_clean();
+
+		// Hides the banner at once for a visitor who has answered. Its own
+		// handle, enqueued here at wp_head priority 1, so core prints it with
+		// the other styles at priority 8 - still in <head>, long before the
+		// banner in the footer.
+		wp_register_style( 'digitizer-cookie-consent-precheck', false, array(), DIGITIZER_COOKIE_CONSENT_VERSION );
+		wp_enqueue_style( 'digitizer-cookie-consent-precheck' );
+		wp_add_inline_style( 'digitizer-cookie-consent-precheck', self::precheck_css() );
+
+		// First in <head>. data-no-defer and data-cfasync="false" keep WP
+		// Rocket and Cloudflare Rocket Loader from deferring it: it must run
+		// before any tag reads consent.
+		wp_print_inline_script_tag(
+			$js,
+			array(
+				'id'            => 'digitizer-cookie-consent-precheck',
+				'data-no-defer' => true,
+				'data-cfasync'  => 'false',
+			)
+		);
+	}
+
+	/**
+	 * The rule that hides the banner for a visitor the precheck found to
+	 * have answered.
+	 *
+	 * @return string
+	 */
+	public static function precheck_css() {
+		return 'html[data-dpt-cb-resolved="1"] #dpt-cb-banner,html[data-dpt-cb-resolved="1"] #dpt-cb-overlay{display:none !important;}';
 	}
 
 	/**
@@ -452,6 +480,7 @@ class Digitizer_Cookie_Consent_Frontend {
 		}
 		$base = DIGITIZER_COOKIE_CONSENT_URL . 'assets/';
 		wp_enqueue_style(  'digitizer-cookie-consent', $base . 'css/frontend.css', array(), DIGITIZER_COOKIE_CONSENT_VERSION );
+		wp_add_inline_style( 'digitizer-cookie-consent', $this->design_css( Digitizer_Cookie_Consent_Settings::all() ) );
 		// After the WP Consent API's script when it is in use, so the banner
 		// corrects any stale state before plugins reading the API run. Only
 		// when the API is really here: a missing dependency would drop the
@@ -600,7 +629,6 @@ class Digitizer_Cookie_Consent_Frontend {
 		$dir   = $this->lang_dir( $lang );
 		$texts = Digitizer_Cookie_Consent_Settings::get_texts( $lang );
 
-		$this->render_inline_css( $o );
 		$this->render_banner_markup( $o, $texts, $lang, $dir );
 		$this->render_float_button( $o, $texts );
 	}
@@ -634,9 +662,14 @@ class Digitizer_Cookie_Consent_Frontend {
 	}
 
 	/**
-	 * Build the custom CSS for this banner instance.
+	 * The custom CSS for this banner instance, added to the plugin's
+	 * stylesheet with wp_add_inline_style() - never a raw <style>.
+	 *
+	 * @param array $o Settings.
+	 * @return string
 	 */
-	private function render_inline_css( $o ) {
+	public function design_css( $o ) {
+		ob_start();
 		$text_color  = esc_attr( $o['text_color'] );
 		$title_color = $o['title_color'] ? esc_attr( $o['title_color'] ) : $text_color;
 		$title_size  = (int) $o['title_font_size'];
@@ -759,7 +792,6 @@ class Digitizer_Cookie_Consent_Frontend {
 		 */
 		// phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- CSS context; values sanitized at assignment, see above.
 		?>
-		<style id="dpt-cb-inline-css">
 			#dpt-cb-overlay { background: <?php echo esc_attr( $overlay_rgba ); ?>; }
 			<?php if ( '' !== $font_family ) : ?>
 			/* Explicit font stack (Elementor's primary font or a custom one).
@@ -955,9 +987,9 @@ class Digitizer_Cookie_Consent_Frontend {
 					<?php echo $fb_pos_m; ?>
 				}
 			}
-		</style>
 		<?php
 		// phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped
+		return (string) ob_get_clean();
 	}
 
 	/**
@@ -1231,21 +1263,11 @@ class Digitizer_Cookie_Consent_Frontend {
 			return;
 		}
 		$mobile_class = trim( $this->hide_mobile_class( $o ) );
-		// Inline onclick is a defensive fallback: if a cache/optimizer plugin
-		// delays our JS, the button still works on first click.
-		$inline_open = "try{document.documentElement.removeAttribute('data-dpt-cb-resolved');"
-		             . "var b=document.getElementById('dpt-cb-banner'),o=document.getElementById('dpt-cb-overlay');"
-		             . "if(b){b.classList.remove('dpt-cb-hidden');b.classList.add('dpt-cb-entering');"
-		             . "setTimeout(function(){b.classList.remove('dpt-cb-entering');},500);}"
-		             . "if(o){o.classList.remove('dpt-cb-hidden');}"
-		             . "var m=b&&b.querySelector('.dpt-cb-main-view'),s=b&&b.querySelector('.dpt-cb-settings-view');"
-		             . "if(m)m.style.display='';if(s)s.style.display='none';"
-		             . "}catch(e){}";
 		// Empty text (or the legacy 🍪 seed) renders the built-in SVG cookie
 		// icon; any other text/emoji the admin typed is shown as-is.
 		$float_text = trim( (string) $t['float_button_text'] );
 		?>
-		<button type="button" id="dpt-cb-float-button" class="<?php echo esc_attr( $mobile_class ); ?>" aria-label="<?php echo esc_attr( $t['float_button_aria'] ); ?>" onclick="<?php echo esc_attr( $inline_open ); ?>"><?php
+		<button type="button" id="dpt-cb-float-button" class="<?php echo esc_attr( $mobile_class ); ?>" aria-label="<?php echo esc_attr( $t['float_button_aria'] ); ?>"><?php
 			if ( '' === $float_text || '🍪' === $float_text ) {
 				$this->print_icon( 'cookie' );
 			} else {

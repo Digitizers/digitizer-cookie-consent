@@ -1366,3 +1366,19 @@ define( 'DIGITIZER_COOKIE_CONSENT_VERSION', '1.0.0' );
 define( 'DIGITIZER_COOKIE_CONSENT_FILE', dirname( __DIR__ ) . '/digitizer-cookie-consent.php' );
 define( 'DIGITIZER_COOKIE_CONSENT_PATH', dirname( __DIR__ ) . '/' );
 define( 'DIGITIZER_COOKIE_CONSENT_URL', 'https://example.test/wp-content/plugins/digitizer-cookie-consent/' );
+
+// Inline output through the core APIs (the plugin prints no raw <script>/<style>).
+$GLOBALS['dpt_stub_inline_styles'] = array();
+function wp_print_inline_script_tag( $js, $attributes = array() ) {
+	$attr = '';
+	foreach ( $attributes as $k => $v ) {
+		$attr .= true === $v ? ' ' . $k : ' ' . $k . '="' . htmlspecialchars( (string) $v, ENT_QUOTES ) . '"';
+	}
+	echo '<script' . $attr . ">\n" . $js . "\n</script>\n";
+}
+if ( ! function_exists( 'wp_register_style' ) ) { function wp_register_style( $h, $src = false, $deps = array(), $ver = false ) { return true; } }
+if ( ! function_exists( 'wp_enqueue_style' ) ) { function wp_enqueue_style( $h, $src = '', $deps = array(), $ver = false ) {} }
+function wp_add_inline_style( $handle, $css ) { $GLOBALS['dpt_stub_inline_styles'][ $handle ][] = $css; return true; }
+if ( ! function_exists( 'wp_enqueue_script' ) ) { function wp_enqueue_script( $h, $src = '', $deps = array(), $ver = false, $footer = false ) { $GLOBALS['dpt_stub_scripts'][ $h ] = $deps; } }
+if ( ! function_exists( 'wp_localize_script' ) ) { function wp_localize_script( $h, $name, $data ) { $GLOBALS['dpt_stub_localized'][ $h ] = array( $name, $data ); return true; } }
+if ( ! function_exists( 'wp_is_mobile' ) ) { function wp_is_mobile() { return false; } }

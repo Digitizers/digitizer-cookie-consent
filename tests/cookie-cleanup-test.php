@@ -70,7 +70,7 @@ function dpt_test_cc_run( $jar, $storage, $choice, $cleanup ) {
 	ob_start();
 	( new Digitizer_Cookie_Consent_Frontend() )->inject_inline_consent_check();
 	$html = (string) ob_get_clean();
-	if ( ! preg_match( '#<script id="dpt-cb-precheck"[^>]*>(.*?)</script>#s', $html, $m ) ) {
+	if ( ! preg_match( '#<script id="digitizer-cookie-consent-precheck"[^>]*>(.*?)</script>#s', $html, $m ) ) {
 		return array( 'no precheck' => $html );
 	}
 	if ( null !== $choice ) {

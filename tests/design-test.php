@@ -66,15 +66,9 @@ require_once dirname( __DIR__ ) . '/includes/class-digitizer-cookie-consent-fron
 $GLOBALS['dpt_stub_no_user'] = true;
 $frontend = new Digitizer_Cookie_Consent_Frontend();
 
-/** The inline <style> block for these settings. */
+/** The design CSS for these settings, as added to the plugin's stylesheet. */
 function dpt_test_cb_css( $frontend, $o ) {
-	$m = new ReflectionMethod( 'Digitizer_Cookie_Consent_Frontend', 'render_inline_css' );
-	if ( PHP_VERSION_ID < 80100 ) {
-		$m->setAccessible( true ); // A no-op, and deprecated, from PHP 8.1 on.
-	}
-	ob_start();
-	$m->invoke( $frontend, $o );
-	return (string) ob_get_clean();
+	return $frontend->design_css( $o );
 }
 
 /** The banner markup for these settings, in a language and direction. */
