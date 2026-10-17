@@ -1,0 +1,916 @@
+<?php
+/**
+ * Cookie Banner module - settings storage, defaults and multilingual texts.
+ */
+
+if ( ! defined( 'ABSPATH' ) ) { exit; }
+
+class Digitizer_Cookie_Consent_Settings {
+
+	const OPTION = 'digitizer_cookie_consent';
+
+	/**
+	 * Shared (language-independent) defaults. Texts live in the nested
+	 * 'texts' array, keyed by language code.
+	 */
+	public static function defaults() {
+		return array(
+			// General.
+			'enabled'            => '1',
+			'position'           => 'bottom',       // bottom | top | center | bottom-left | bottom-right
+			'animation'          => 'slide-up',     // fade | slide-up | slide-down | zoom
+			'show_on_mobile'     => '1',
+			'auto_accept_scroll' => '0',
+			'block_scripts'      => '1',
+			// Signal the visitor's choice to Google tags (Consent Mode v2) and to
+			// plugins that read the WP Consent API. Off until a site asks for it:
+			// switching Consent Mode on starts every Google tag on "denied".
+			'consent_mode'       => '0',
+			// "Cookie consent by Digitizer" under the buttons. Off: a
+			// front-end credit is opt-in only (directory guideline 10).
+			'credit'             => '0',
+			// Set by the first save; until then wp-admin says the banner is
+			// live with the default texts.
+			'saved'              => '0',
+			'wp_consent_api'     => '0',
+
+			// Multilingual.
+			'default_lang'       => 'he',
+			'languages'          => array( 'he', 'en' ),
+			'texts'              => array(
+				'he' => self::default_texts( 'he' ),
+				'en' => self::default_texts( 'en' ),
+			),
+
+			// Policy link (shared; WPML/Polylang translate the page per language).
+			'policy_url'         => '',
+			'policy_page_id'     => '0',
+			// The link at the end of the message's last paragraph instead of on a
+			// line of its own.
+			'policy_inline'      => '0',
+			// Empty = the text colour around it, as before.
+			'policy_link_color'  => '',
+
+			// Design - box.
+			'bg_color'           => '#ffffff',
+			'text_color'         => '#333333',
+			'width'              => '700',
+			'max_width_pct'      => '100',
+			// Mobile (<= 640px) box sizing. Defaults mirror the desktop values,
+			// so existing sites keep their current appearance until changed.
+			'width_mobile'         => '700',
+			'max_width_pct_mobile' => '100',
+			// Below 640px: a bar flush with the bottom of the screen, full width,
+			// no margin and no rounded corners. Off keeps the floating card.
+			'mobile_full_width'    => '0',
+			// With the full-width bar: keep the corner radius on the edge that
+			// faces the page (the top corners of a bottom bar). Off squares all four.
+			'mobile_full_width_radius' => '0',
+			// Corner banners are shrink-to-fit, so they take an explicit pixel
+			// width of their own instead of the width/percentage pair. 380 is
+			// what the corner CSS hard-coded before this became configurable,
+			// so existing corner banners keep their exact size.
+			'width_corner'         => '380',
+			// Distance of a corner banner from the side and from the bottom of
+			// the screen, on desktop.
+			'corner_offset_x'      => '20',
+			'corner_offset_y'      => '20',
+
+			// Typography: inherit the site/theme font (default), take Elementor's
+			// primary global font, or set an explicit font stack.
+			'font_family'        => 'inherit', // inherit | elementor | custom
+			'font_family_custom' => '',
+			'border_radius'      => '12',
+			'padding'            => '24',
+			'box_shadow'         => '1',
+
+			// Design - overlay (dim background when banner open).
+			'overlay_enabled'    => '0',
+			'overlay_color'      => '#000000',
+			'overlay_opacity'    => '0.5',
+
+			// Background image.
+			'bg_image_url'       => '',
+			'bg_image_id'        => '',
+			'bg_image_size'      => 'cover',
+			'bg_image_position'  => 'center center',
+			'bg_image_repeat'    => 'no-repeat',
+			'bg_image_overlay_color'   => '#000000',
+			'bg_image_overlay_opacity' => '0',
+
+			// Border.
+			'border_width'       => '0',
+			'border_color'       => '#000000',
+			'border_style'       => 'solid',
+
+			// Typography - Title (logical alignment: start | center | end | justify).
+			'title_color'         => '',
+			'title_font_size'     => '20',
+			'title_align'         => 'start',
+			'title_weight'        => '700',
+			'title_margin_bottom' => '10',
+			// Off hides the title from sight only: it still names the dialog
+			// for screen readers (aria-labelledby).
+			'title_show'          => '1',
+			'title_shadow_enabled' => '0',
+			'title_shadow_color'   => '#000000',
+			'title_shadow_blur'    => '4',
+			'title_shadow_y'       => '2',
+
+			// Typography - Content.
+			'content_color'      => '',
+			'content_font_size'  => '14',
+			'content_align'      => 'start',
+			'content_shadow_enabled' => '0',
+			'content_shadow_color'   => '#000000',
+			'content_shadow_blur'    => '3',
+			'content_shadow_y'       => '1',
+
+			// Close button (X).
+			'show_close'         => '1',
+			'close_size'         => '22',
+			'close_color'        => '',
+			'close_bg_color'     => '',
+			// 0.7 is what frontend.css always faded it to; hover still shows it in full.
+			'close_opacity'      => '0.7',
+			// text = the × character in the banner's font; svg = a drawn icon,
+			// the same in every font.
+			'close_icon'         => 'text',
+
+			// Button "Accept".
+			'btn_accept_bg'       => '#16a34a',
+			'btn_accept_color'    => '#ffffff',
+			'btn_accept_radius'   => '6',
+			'btn_accept_hover_bg' => '#15803d',
+
+			// Button "Reject".
+			'btn_reject_bg'       => '#e5e7eb',
+			'btn_reject_color'    => '#111827',
+			'btn_reject_radius'   => '6',
+			'btn_reject_hover_bg' => '#d1d5db',
+			'btn_reject_show'     => '1',
+
+			// Button "Settings".
+			'btn_settings_bg'     => '#ffffff',
+			'btn_settings_color'  => '#2563eb',
+			'btn_settings_radius' => '6',
+			'btn_settings_show'   => '1',
+			'btn_settings_border' => '1',
+			'btn_settings_border_color' => '', // Empty = the button's text colour.
+			// Every banner button. Height 0 = as tall as its padding makes it.
+			'btn_height'          => '0',
+			'btn_font_size'       => '14',
+			'btn_font_weight'     => '600',
+			// On desktop the banner's buttons share the row equally. Off sizes
+			// each to its text.
+			'btn_stretch'         => '0',
+
+			// Button "Save preferences".
+			'btn_save_bg'         => '#2563eb',
+			'btn_save_color'      => '#ffffff',
+			'btn_save_radius'     => '6',
+
+			// Floating "Manage cookies" button.
+			'float_button_enabled'  => '1',
+			'float_button_position' => 'bottom-right',
+			'float_button_bg'       => '#2563eb',
+			'float_button_color'    => '#ffffff',
+			'float_offset_x'        => '20',
+			'float_offset_y'        => '20',
+			'float_offset_x_mobile' => '15',
+			'float_offset_y_mobile' => '15',
+			'float_button_size'        => '50',
+			'float_button_size_mobile' => '44',
+
+			// Categories (enable flags are shared; names/descriptions are per language).
+			'cat_functional_enabled' => '1',
+			'cat_analytics_enabled'  => '1',
+			'cat_marketing_enabled'  => '1',
+			// Cookie names (with * wildcards) deleted from the browser when the
+			// category is denied - on withdrawal, and on every page while it
+			// stays denied. Empty: nothing is deleted.
+			'cleanup_functional'     => '',
+			'cleanup_analytics'      => '',
+			'cleanup_marketing'      => '',
+
+			// Scripts per category (placed in <head> only after consent).
+			'scripts_functional' => '',
+			'scripts_analytics'  => '',
+			'scripts_marketing'  => '',
+
+			// Consent behavior.
+			'consent_days'       => '180',
+			'consent_version'    => '1',
+			'show_delay'         => '0',
+		);
+	}
+
+	/**
+	 * The translatable text keys stored per language.
+	 */
+	public static function text_keys() {
+		return array(
+			'title', 'message',
+			'btn_accept_text', 'btn_reject_text', 'btn_settings_text', 'btn_save_text',
+			'policy_text',
+			'settings_view_title', 'always_on_label',
+			'float_button_text', 'float_button_aria', 'close_aria',
+			'cat_essential_name', 'cat_essential_desc',
+			'cat_functional_name', 'cat_functional_desc',
+			'cat_analytics_name', 'cat_analytics_desc',
+			'cat_marketing_name', 'cat_marketing_desc',
+		);
+	}
+
+	/**
+	 * Text keys that may contain limited HTML (sanitized with wp_kses_post).
+	 */
+	public static function html_text_keys() {
+		return array( 'message', 'cat_essential_desc', 'cat_functional_desc', 'cat_analytics_desc', 'cat_marketing_desc' );
+	}
+
+	/**
+	 * Seed texts for a language. Hebrew and English ship complete;
+	 * any other language starts from the English seed.
+	 */
+	public static function default_texts( $lang ) {
+		if ( 'he' === $lang ) {
+			return array(
+				'title'               => 'אנחנו משתמשים בעוגיות',
+				'message'             => 'האתר שלנו משתמש בעוגיות (Cookies) כדי לשפר את חוויית הגלישה שלך, להתאים את התוכן אישית ולנתח את התנועה באתר. על ידי לחיצה על "קבל הכל" אתה מסכים לשימוש בעוגיות. ניתן לנהל את ההעדפות שלך בכל עת.',
+				'btn_accept_text'     => 'קבל הכל',
+				'btn_reject_text'     => 'דחה הכל',
+				'btn_settings_text'   => 'הגדרות מתקדמות',
+				'btn_save_text'       => 'שמור העדפות',
+				'policy_text'         => 'מדיניות פרטיות',
+				'settings_view_title' => 'ניהול העדפות עוגיות',
+				'always_on_label'     => 'תמיד פעילות',
+				'float_button_text'   => '',
+				'float_button_aria'   => 'ניהול עוגיות',
+				'close_aria'          => 'סגור',
+				'cat_essential_name'  => 'עוגיות חיוניות',
+				'cat_essential_desc'  => 'עוגיות חיוניות הן הכרחיות לתפקוד בסיסי של האתר ולא ניתן לבטלן.',
+				'cat_functional_name' => 'פונקציונליות',
+				'cat_functional_desc' => 'עוגיות פונקציונליות מאפשרות שמירת העדפות כמו שפה ואזור.',
+				'cat_analytics_name'  => 'ביצועים / אנליטיקה',
+				'cat_analytics_desc'  => 'עוגיות ביצועים עוזרות להבין איך המבקרים משתמשים באתר ומאפשרות לנו לשפר אותו.',
+				'cat_marketing_name'  => 'שיווק',
+				'cat_marketing_desc'  => 'עוגיות שיווק משמשות להצגת פרסומות רלוונטיות על פי ההתנהגות שלך באתר.',
+			);
+		}
+		// English seed (also the base for any new language).
+		return array(
+			'title'               => 'We use cookies',
+			'message'             => 'Our website uses cookies to improve your browsing experience, personalize content and analyze our traffic. By clicking "Accept all" you consent to the use of cookies. You can manage your preferences at any time.',
+			'btn_accept_text'     => 'Accept all',
+			'btn_reject_text'     => 'Reject all',
+			'btn_settings_text'   => 'Advanced settings',
+			'btn_save_text'       => 'Save preferences',
+			'policy_text'         => 'Privacy policy',
+			'settings_view_title' => 'Manage cookie preferences',
+			'always_on_label'     => 'Always active',
+			'float_button_text'   => '',
+			'float_button_aria'   => 'Manage cookies',
+			'close_aria'          => 'Close',
+			'cat_essential_name'  => 'Essential cookies',
+			'cat_essential_desc'  => 'Essential cookies are required for the basic functionality of the website and cannot be disabled.',
+			'cat_functional_name' => 'Functional',
+			'cat_functional_desc' => 'Functional cookies enable saving preferences such as language and region.',
+			'cat_analytics_name'  => 'Performance / Analytics',
+			'cat_analytics_desc'  => 'Performance cookies help us understand how visitors use the website and allow us to improve it.',
+			'cat_marketing_name'  => 'Marketing',
+			'cat_marketing_desc'  => 'Marketing cookies are used to show you relevant ads based on your activity on the website.',
+		);
+	}
+
+	/**
+	 * Normalize a language code: `he`, `en`, `pt_BR`. Returns '' when invalid.
+	 */
+	public static function normalize_lang_code( $code ) {
+		$code = str_replace( '-', '_', trim( (string) $code ) );
+		if ( ! preg_match( '/^([a-zA-Z]{2,3})(?:_([a-zA-Z]{2}))?$/', $code, $m ) ) {
+			return '';
+		}
+		$normalized = strtolower( $m[1] );
+		if ( ! empty( $m[2] ) ) {
+			$normalized .= '_' . strtoupper( $m[2] );
+		}
+		return $normalized;
+	}
+
+	/**
+	 * Ensure defaults exist in DB on activation / upgrade.
+	 */
+	public static function install_defaults() {
+		$existing = get_option( self::OPTION );
+		$defaults = self::defaults();
+
+		if ( ! is_array( $existing ) ) {
+			add_option( self::OPTION, $defaults );
+			return;
+		}
+
+		// Merge defaults for new keys, keep user's saved values.
+		$merged = array_merge( $defaults, $existing );
+
+		// The module's two v1.0.1 migrations (the 900px/95% box, the emoji in
+		// the seeded texts) are not carried over: they were gated on Digitizer
+		// Pro Tools' database version, which this plugin does not have, and an
+		// option imported from the module had already been through them there.
+
+		// Responsive width: the box used to be sized by hard-coded CSS per
+		// position, so the stored width/max_width_pct were NOT what a corner or
+		// a phone actually rendered. Now that the settings are authoritative for
+		// every position and breakpoint, seed the new keys from each site's
+		// EFFECTIVE current rendering, so upgrading changes nothing on screen.
+		// Fresh installs (no saved options) just take defaults().
+		// Only the NEW keys are initialised here - the saved desktop width and
+		// percentage are left exactly as the site stored them. What a corner
+		// banner used to render (a hard-coded 380px) is carried by the separate
+		// width_corner setting, whose default is that same 380px.
+		if ( ! empty( $existing ) && ! isset( $existing['width_mobile'], $existing['max_width_pct_mobile'] ) ) {
+			$pos       = isset( $existing['position'] ) ? (string) $existing['position'] : 'bottom';
+			$is_corner = in_array( $pos, array( 'bottom-left', 'bottom-right' ), true );
+			$is_bar    = in_array( $pos, array( 'bottom', 'top' ), true );
+
+			// Mobile: bars and corners were forced full width by CSS; the
+			// centered modal kept using the desktop values.
+			if ( $is_bar || $is_corner ) {
+				// 640px is the mobile breakpoint itself, so this never caps.
+				$merged['width_mobile']         = '640';
+				$merged['max_width_pct_mobile'] = '100';
+			} else {
+				$merged['width_mobile']         = isset( $existing['width'] ) ? (string) $existing['width'] : $defaults['width'];
+				$merged['max_width_pct_mobile'] = isset( $existing['max_width_pct'] ) ? (string) $existing['max_width_pct'] : $defaults['max_width_pct'];
+			}
+		}
+
+		// Deep-merge texts: keep saved languages, fill in missing keys per language.
+		$languages = ( isset( $existing['languages'] ) && is_array( $existing['languages'] ) ) ? $existing['languages'] : $defaults['languages'];
+		$texts     = ( isset( $existing['texts'] ) && is_array( $existing['texts'] ) ) ? $existing['texts'] : array();
+		$merged['languages'] = array_values( array_unique( $languages ) );
+		$merged['texts']     = array();
+		foreach ( $merged['languages'] as $lang ) {
+			$saved = ( isset( $texts[ $lang ] ) && is_array( $texts[ $lang ] ) ) ? $texts[ $lang ] : array();
+			$merged['texts'][ $lang ] = array_merge( self::default_texts( $lang ), $saved );
+		}
+
+		update_option( self::OPTION, $merged );
+
+		// Migrations change frontend-rendered settings just like a normal
+		// save does, so cached pages must be invalidated too. This runs on
+		// plugins_loaded - defer to init when needed so cache plugins that
+		// register their purge listeners on init still catch it.
+		if ( $merged != $existing ) {
+			if ( did_action( 'init' ) ) {
+				self::purge_page_caches();
+			} else {
+				add_action( 'init', array( __CLASS__, 'purge_page_caches' ), 99 );
+			}
+		}
+	}
+
+	/**
+	 * Get all settings (merged with defaults; texts deep-merged per language).
+	 */
+	public static function all() {
+		$opts     = get_option( self::OPTION, array() );
+		$defaults = self::defaults();
+		if ( ! is_array( $opts ) ) {
+			$opts = array();
+		}
+		$merged = array_merge( $defaults, $opts );
+
+		if ( ! is_array( $merged['languages'] ) || empty( $merged['languages'] ) ) {
+			$merged['languages'] = $defaults['languages'];
+		}
+		if ( ! in_array( $merged['default_lang'], $merged['languages'], true ) ) {
+			$merged['default_lang'] = $merged['languages'][0];
+		}
+
+		// Only the three known font modes are meaningful; anything else (older
+		// data, a hand-edited option) falls back to inheriting the site font.
+		if ( ! in_array( $merged['font_family'], array( 'inherit', 'elementor', 'custom' ), true ) ) {
+			$merged['font_family'] = 'inherit';
+		}
+
+		// These values are printed verbatim into the inline <style> block, and
+		// sanitize_text_field() leaves CSS punctuation intact. The admin only
+		// ever offers the values below (they are <select> fields), so pin them
+		// to that list: a hand-crafted POST cannot inject a CSS declaration.
+		foreach ( self::css_value_allowlists() as $key => $allowed ) {
+			if ( ! isset( $merged[ $key ], $defaults[ $key ] ) ) {
+				continue;
+			}
+			if ( ! in_array( (string) $merged[ $key ], $allowed, true ) ) {
+				$merged[ $key ] = $defaults[ $key ];
+			}
+		}
+
+		$saved_texts     = ( isset( $opts['texts'] ) && is_array( $opts['texts'] ) ) ? $opts['texts'] : array();
+		$merged['texts'] = array();
+		foreach ( $merged['languages'] as $lang ) {
+			$saved = ( isset( $saved_texts[ $lang ] ) && is_array( $saved_texts[ $lang ] ) ) ? $saved_texts[ $lang ] : array();
+			$merged['texts'][ $lang ] = array_merge( self::default_texts( $lang ), $saved );
+		}
+		return $merged;
+	}
+
+	/**
+	 * Get one shared setting.
+	 */
+	public static function get( $key ) {
+		$all = self::all();
+		return isset( $all[ $key ] ) ? $all[ $key ] : '';
+	}
+
+	/**
+	 * Settings whose value is written straight into the inline <style> block and
+	 * therefore must match one of the values the admin actually offers.
+	 *
+	 * @return array<string,string[]>
+	 */
+	public static function css_value_allowlists() {
+		return array(
+			'title_weight'      => array( '300', '400', '500', '600', '700', '800', '900' ),
+			'btn_font_weight'   => array( '300', '400', '500', '600', '700', '800', '900' ),
+			'close_icon'        => array( 'text', 'svg' ),
+			'border_style'      => array( 'solid', 'dashed', 'dotted', 'double' ),
+			'bg_image_size'     => array( 'cover', 'contain', 'auto', '100% 100%' ),
+			'bg_image_repeat'   => array( 'no-repeat', 'repeat', 'repeat-x', 'repeat-y' ),
+			'bg_image_position' => array(
+				'center center', 'top center', 'bottom center',
+				'top left', 'top right', 'bottom left', 'bottom right',
+				'center left', 'center right',
+			),
+		);
+	}
+
+	/**
+	 * Cookie name patterns as a site enters them: one per line or comma
+	 * separated, * as a wildcard. A pattern keeps only the characters a
+	 * cookie name is made of here, and must name something - a lone * (every
+	 * cookie on the site) is dropped. Duplicates go.
+	 *
+	 * @param string $value What was entered, or what is stored.
+	 * @return string[]
+	 */
+	public static function cookie_patterns( $value ) {
+		$out = array();
+		foreach ( preg_split( '/[\s,]+/', (string) $value ) as $token ) {
+			if ( '' === $token || ! preg_match( '/^[A-Za-z0-9_.*-]+$/', $token ) ) {
+				continue;
+			}
+			if ( '' === str_replace( '*', '', $token ) ) {
+				continue;
+			}
+			$out[ $token ] = true;
+		}
+		return array_keys( $out );
+	}
+
+	// --- Typography --------------------------------------------------------
+
+	/**
+	 * Sanitize a CSS font stack. The value is printed inside an inline <style>
+	 * block, so anything that could terminate the declaration or open a new
+	 * rule (;{}()<>@\ and newlines) is stripped rather than escaped - only font
+	 * names, quotes, commas, spaces, dots, hyphens and underscores survive.
+	 *
+	 * @param mixed $value Raw font stack.
+	 * @return string Safe font stack, or '' when nothing usable remains.
+	 */
+	public static function sanitize_font_family( $value ) {
+		if ( ! is_scalar( $value ) ) {
+			return '';
+		}
+		$value = (string) $value;
+		// Invalid UTF-8 cannot be reasoned about safely - reject it outright.
+		if ( '' !== $value && 1 !== preg_match( '//u', $value ) ) {
+			return '';
+		}
+		// Drop control and formatting characters (newlines, RTL marks, ...).
+		$value = preg_replace( '/[\p{Cc}\p{Cf}]/u', '', $value );
+		// Remove ONLY the characters that could terminate the declaration or
+		// open a new rule / comment / at-rule / function. A denylist rather than
+		// an ASCII allowlist, so non-Latin family names ("微软雅黑", "רוביק",
+		// "Роботo") survive instead of being emptied out.
+		$value = preg_replace( '/[;{}()\[\]<>@\\\\\/:!*&=]/u', '', $value );
+		if ( null === $value ) {
+			return ''; // preg failure (e.g. backtrack limit) - fail closed.
+		}
+		$value = trim( preg_replace( '/\s+/u', ' ', $value ), " \t\n\r\0\x0B," );
+		if ( '' === $value ) {
+			return '';
+		}
+		// A stack this long is not a real font list - treat it as junk. Counted
+		// in characters, so multibyte names are not penalised.
+		$length = function_exists( 'mb_strlen' ) ? mb_strlen( $value, 'UTF-8' ) : strlen( $value );
+		return ( $length > 200 ) ? '' : $value;
+	}
+
+	/**
+	 * Elementor's primary global font family, or '' when Elementor is inactive
+	 * or the active kit does not define one.
+	 *
+	 * @return string
+	 */
+	public static function elementor_primary_font() {
+		if ( ! did_action( 'elementor/loaded' ) && ! class_exists( '\\Elementor\\Plugin' ) ) {
+			return '';
+		}
+		$kit_id = (int) get_option( 'elementor_active_kit' );
+		if ( $kit_id <= 0 ) {
+			return '';
+		}
+		$kit = get_post_meta( $kit_id, '_elementor_page_settings', true );
+		if ( ! is_array( $kit ) || empty( $kit['system_typography'] ) || ! is_array( $kit['system_typography'] ) ) {
+			return '';
+		}
+		foreach ( $kit['system_typography'] as $item ) {
+			if ( is_array( $item ) && isset( $item['_id'] ) && 'primary' === $item['_id'] && ! empty( $item['typography_font_family'] ) ) {
+				return self::sanitize_font_family( $item['typography_font_family'] );
+			}
+		}
+		return '';
+	}
+
+	/**
+	 * The font-family CSS value for the banner, or '' to inherit from the site.
+	 *
+	 * @return string
+	 */
+	public static function font_family_css() {
+		$mode = (string) self::get( 'font_family' );
+
+		if ( 'custom' === $mode ) {
+			return self::sanitize_font_family( self::get( 'font_family_custom' ) );
+		}
+		if ( 'elementor' === $mode ) {
+			$font = self::elementor_primary_font();
+			// Quote the family name and keep a generic fallback, so a missing
+			// Elementor font degrades to the browser default rather than nothing.
+			return ( '' !== $font ) ? '"' . $font . '", sans-serif' : '';
+		}
+		return ''; // inherit - emit no font-family at all.
+	}
+
+	/**
+	 * Resolved texts for a language with the fallback chain:
+	 * en seed <- default-language seed <- saved default-language <- saved $lang.
+	 * Empty saved values fall through to the previous layer.
+	 */
+	public static function get_texts( $lang ) {
+		$all     = self::all();
+		$default = $all['default_lang'];
+
+		$layers = array(
+			self::default_texts( 'en' ),
+			self::default_texts( $default ),
+			isset( $all['texts'][ $default ] ) ? $all['texts'][ $default ] : array(),
+		);
+		if ( $lang !== $default ) {
+			$layers[] = self::default_texts( $lang );
+			$layers[] = isset( $all['texts'][ $lang ] ) ? $all['texts'][ $lang ] : array();
+		}
+
+		$texts = array();
+		foreach ( self::text_keys() as $key ) {
+			// For float_button_text an explicit blank MEANS "use the built-in
+			// icon", so it must win over lower layers instead of falling
+			// through to another language's custom label.
+			$blank_is_value = ( 'float_button_text' === $key );
+			$texts[ $key ]  = '';
+			foreach ( $layers as $layer ) {
+				if ( ! isset( $layer[ $key ] ) ) {
+					continue;
+				}
+				$value = (string) $layer[ $key ];
+				if ( $blank_is_value || '' !== trim( $value ) ) {
+					$texts[ $key ] = $value;
+				}
+			}
+		}
+		return $texts;
+	}
+
+	/**
+	 * Add a language (seeded from defaults). Returns normalized code or false.
+	 */
+	public static function add_language( $code ) {
+		$code = self::normalize_lang_code( $code );
+		if ( '' === $code ) {
+			return false;
+		}
+		$opts = get_option( self::OPTION, array() );
+		if ( ! is_array( $opts ) ) {
+			$opts = self::defaults();
+		}
+		$all = self::all();
+		if ( in_array( $code, $all['languages'], true ) ) {
+			return $code; // Already exists.
+		}
+		$opts['languages']       = array_merge( $all['languages'], array( $code ) );
+		$opts['texts']           = isset( $opts['texts'] ) && is_array( $opts['texts'] ) ? $opts['texts'] : array();
+		$opts['texts'][ $code ]  = self::default_texts( $code );
+		update_option( self::OPTION, $opts );
+		self::purge_page_caches();
+		return $code;
+	}
+
+	/**
+	 * Remove a language. The default language cannot be removed.
+	 */
+	public static function remove_language( $code ) {
+		$all = self::all();
+		if ( $code === $all['default_lang'] || ! in_array( $code, $all['languages'], true ) ) {
+			return false;
+		}
+		$opts = get_option( self::OPTION, array() );
+		if ( ! is_array( $opts ) ) {
+			return false;
+		}
+		$opts['languages'] = array_values( array_diff( $all['languages'], array( $code ) ) );
+		if ( isset( $opts['texts'][ $code ] ) ) {
+			unset( $opts['texts'][ $code ] );
+		}
+		update_option( self::OPTION, $opts );
+		self::purge_page_caches();
+		return true;
+	}
+
+	/**
+	 * Save settings with per-type sanitization.
+	 *
+	 * Only fields present in $raw are updated - critical for tabbed forms
+	 * where each tab submits a subset. Checkboxes use the hidden-input
+	 * trick so unchecked boxes on the current tab still submit '0'.
+	 * Texts are nested as texts[<lang>][<key>]; only submitted languages
+	 * are touched.
+	 */
+	public static function save( $raw ) {
+		if ( ! is_array( $raw ) ) {
+			return false;
+		}
+		$defaults = self::defaults();
+		$existing = get_option( self::OPTION, array() );
+		if ( ! is_array( $existing ) ) {
+			$existing = array();
+		}
+
+		$clean = array_merge( $defaults, $existing );
+		if ( isset( $existing['texts'] ) && is_array( $existing['texts'] ) ) {
+			$clean['texts'] = $existing['texts'];
+		}
+		if ( isset( $existing['languages'] ) && is_array( $existing['languages'] ) ) {
+			$clean['languages'] = $existing['languages'];
+		}
+		$before = $clean;
+		$clean  = self::sanitize( $raw, $clean );
+		// Saved once: the first-save notice goes.
+		$clean['saved'] = '1';
+
+		update_option( self::OPTION, $clean );
+
+		// Every module setting shapes the rendered/cached HTML (precheck
+		// version, banner markup, raw snippets when blocking is off, the
+		// localized config...), so any actual change must invalidate the
+		// page caches - otherwise stale pages keep the old behavior, e.g.
+		// keep running tags after block_scripts was switched on.
+		if ( $clean != $before ) {
+			self::purge_page_caches();
+		}
+		return true;
+	}
+
+	/**
+	 * Sanitise submitted settings over a starting option, and return the
+	 * result without writing it. save() and the import from Digitizer Pro
+	 * Tools both go through here.
+	 *
+	 * @param array $raw  Submitted values.
+	 * @param array $base The option to start from (defaults merged in).
+	 * @return array
+	 */
+	public static function sanitize( array $raw, array $base ) {
+		$defaults = self::defaults();
+		$clean    = $base;
+
+		// Script fields (allow full script tags for trusted admins).
+		$script_fields = array( 'scripts_functional', 'scripts_analytics', 'scripts_marketing' );
+
+		// URL fields.
+		$url_fields = array( 'policy_url', 'bg_image_url' );
+
+		// Hex color fields that can be empty.
+		$optional_colors = array( 'title_color', 'content_color', 'close_color', 'close_bg_color', 'btn_settings_border_color', 'policy_link_color' );
+
+		// Hex color fields required.
+		$color_fields = array(
+			'bg_color', 'text_color', 'overlay_color', 'bg_image_overlay_color', 'border_color',
+			'title_shadow_color', 'content_shadow_color',
+			'btn_accept_bg', 'btn_accept_color', 'btn_accept_hover_bg',
+			'btn_reject_bg', 'btn_reject_color', 'btn_reject_hover_bg',
+			'btn_settings_bg', 'btn_settings_color',
+			'btn_save_bg', 'btn_save_color',
+			'float_button_bg', 'float_button_color',
+		);
+
+		// Checkbox fields.
+		$checkbox_fields = array(
+			'enabled', 'show_on_mobile', 'auto_accept_scroll', 'block_scripts',
+			'consent_mode', 'wp_consent_api', 'credit',
+			'box_shadow', 'overlay_enabled',
+			'title_shadow_enabled', 'content_shadow_enabled',
+			'show_close',
+			'btn_reject_show', 'btn_settings_show', 'btn_settings_border',
+			'title_show', 'mobile_full_width', 'policy_inline',
+			'mobile_full_width_radius', 'btn_stretch',
+			'float_button_enabled',
+			'cat_functional_enabled', 'cat_analytics_enabled', 'cat_marketing_enabled',
+		);
+
+		// Number fields: [ min, max ] as the form shows them; null is no upper
+		// bound, and a float minimum makes the field a decimal.
+		$numbers = array(
+			'consent_days' => array( 1, 730 ), 'consent_version' => array( 1, null ), 'show_delay' => array( 0, 120 ),
+			'overlay_opacity' => array( 0.0, 1 ), 'bg_image_overlay_opacity' => array( 0.0, 1 ), 'close_opacity' => array( 0.1, 1 ),
+			'width' => array( 200, null ), 'width_corner' => array( 200, null ), 'width_mobile' => array( 200, null ),
+			'max_width_pct' => array( 10, 100 ), 'max_width_pct_mobile' => array( 10, 100 ),
+			'corner_offset_x' => array( 0, null ), 'corner_offset_y' => array( 0, null ),
+			'border_radius' => array( 0, null ), 'padding' => array( 0, null ), 'border_width' => array( 0, null ),
+			'close_size' => array( 12, 60 ), 'title_font_size' => array( 10, 80 ), 'title_margin_bottom' => array( 0, null ),
+			'title_shadow_blur' => array( 0, 40 ), 'title_shadow_y' => array( -20, 20 ),
+			'content_font_size' => array( 10, 40 ), 'content_shadow_blur' => array( 0, 40 ), 'content_shadow_y' => array( -20, 20 ),
+			'btn_height' => array( 0, null ), 'btn_font_size' => array( 8, 40 ),
+			'btn_accept_radius' => array( 0, null ), 'btn_reject_radius' => array( 0, null ), 'btn_settings_radius' => array( 0, null ), 'btn_save_radius' => array( 0, null ),
+			'float_offset_x' => array( 0, 500 ), 'float_offset_y' => array( 0, 500 ), 'float_offset_x_mobile' => array( 0, 500 ), 'float_offset_y_mobile' => array( 0, 500 ),
+			'float_button_size' => array( 30, 100 ), 'float_button_size_mobile' => array( 30, 100 ),
+		);
+		$numbers = array_intersect_key( $numbers, $defaults );
+
+		foreach ( $raw as $key => $raw_value ) {
+			if ( 'texts' === $key ) {
+				$clean['texts'] = self::sanitize_texts( $raw_value, $clean );
+				continue;
+			}
+			if ( 'default_lang' === $key ) {
+				$code = self::normalize_lang_code( is_array( $raw_value ) ? '' : wp_unslash( $raw_value ) );
+				if ( $code && in_array( $code, $clean['languages'], true ) ) {
+					$clean['default_lang'] = $code;
+				}
+				continue;
+			}
+			if ( 'languages' === $key ) {
+				continue; // Managed only via add_language()/remove_language().
+			}
+			if ( ! array_key_exists( $key, $defaults ) ) {
+				continue; // Unknown field - ignore.
+			}
+			$value = is_array( $raw_value ) ? '' : wp_unslash( $raw_value );
+
+			if ( in_array( $key, $script_fields, true ) ) {
+				if ( current_user_can( 'unfiltered_html' ) ) {
+					$clean[ $key ] = $value;
+				} else {
+					$clean[ $key ] = wp_kses_post( $value );
+				}
+			} elseif ( in_array( $key, $url_fields, true ) ) {
+				$clean[ $key ] = esc_url_raw( $value );
+			} elseif ( in_array( $key, $optional_colors, true ) ) {
+				$clean[ $key ] = '' === $value ? '' : ( sanitize_hex_color( $value ) ?: '' );
+			} elseif ( in_array( $key, $color_fields, true ) ) {
+				$clean[ $key ] = sanitize_hex_color( $value ) ?: $defaults[ $key ];
+			} elseif ( in_array( $key, $checkbox_fields, true ) ) {
+				$clean[ $key ] = '1' === $value ? '1' : '0';
+			} elseif ( in_array( $key, array( 'cleanup_functional', 'cleanup_analytics', 'cleanup_marketing' ), true ) ) {
+				$clean[ $key ] = implode( "\n", self::cookie_patterns( $value ) );
+			} elseif ( isset( $numbers[ $key ] ) ) {
+				// Blank or not a number is the default; anything else is held
+				// to the bounds the form shows. A blank width would otherwise
+				// become max-width:0 and hide the banner, and a blank consent
+				// version would be read differently by the precheck and by
+				// frontend.js.
+				list( $min, $max ) = $numbers[ $key ];
+				if ( ! is_numeric( $value ) ) {
+					$clean[ $key ] = $defaults[ $key ];
+				} else {
+					$n = is_float( $min ) ? (float) $value : (int) $value;
+					$n = max( $min, null === $max ? $n : min( $max, $n ) );
+					$clean[ $key ] = (string) $n;
+				}
+			} else {
+				$clean[ $key ] = sanitize_text_field( $value );
+			}
+		}
+
+		return $clean;
+	}
+
+	/**
+	 * The module's option, as a site moving from Digitizer Pro Tools has it,
+	 * made into this plugin's. Everything comes across: the languages a site
+	 * added (save() ignores the list, and its text sanitiser keeps only the
+	 * destination's languages), the default language, and the snippets as
+	 * stored - they were checked when they were saved, and sanitize() would
+	 * strip their <script> tags for a user without unfiltered_html.
+	 *
+	 * @param array $theirs The module's option.
+	 * @return array
+	 */
+	public static function sanitize_import( array $theirs ) {
+		$base  = self::defaults();
+		$langs = array();
+		foreach ( (array) ( isset( $theirs['languages'] ) ? $theirs['languages'] : array() ) as $code ) {
+			$code = self::normalize_lang_code( (string) $code );
+			if ( $code && ! in_array( $code, $langs, true ) ) {
+				$langs[] = $code;
+			}
+		}
+		if ( $langs ) {
+			$base['languages'] = $langs;
+			$base['texts']     = array();
+			foreach ( $langs as $code ) {
+				$base['texts'][ $code ] = self::default_texts( $code );
+			}
+		}
+		// Texts are sanitised against $base, which now holds every source language.
+		// sanitize() expects slashed request data and unslashes it; a value
+		// read from the database is not slashed, so it is slashed first, or a
+		// backslash in a text ("C:\docs") would be lost.
+		$clean              = self::sanitize( wp_slash( $theirs ), $base );
+		$clean['languages'] = $base['languages'];
+		if ( isset( $theirs['default_lang'] ) && in_array( $theirs['default_lang'], $clean['languages'], true ) ) {
+			$clean['default_lang'] = $theirs['default_lang'];
+		}
+		foreach ( array( 'scripts_functional', 'scripts_analytics', 'scripts_marketing' ) as $key ) {
+			if ( isset( $theirs[ $key ] ) && is_string( $theirs[ $key ] ) ) {
+				$clean[ $key ] = $theirs[ $key ];
+			}
+		}
+		return $clean;
+	}
+
+	/**
+	 * Best-effort purge of well-known full-page cache plugins.
+	 */
+	public static function purge_page_caches() {
+		if ( function_exists( 'rocket_clean_domain' ) ) {
+			rocket_clean_domain(); // WP Rocket.
+		}
+		if ( function_exists( 'wp_cache_clear_cache' ) ) {
+			// WP Super Cache. Without a blog id it empties the cache of the whole
+			// network; one site's banner is not every other site's business.
+			wp_cache_clear_cache( is_multisite() ? get_current_blog_id() : 0 );
+		}
+		if ( function_exists( 'w3tc_flush_all' ) ) {
+			w3tc_flush_all(); // W3 Total Cache.
+		}
+		if ( function_exists( 'wpfc_clear_all_cache' ) ) {
+			wpfc_clear_all_cache( true ); // WP Fastest Cache.
+		}
+		if ( function_exists( 'sg_cachepress_purge_cache' ) ) {
+			sg_cachepress_purge_cache(); // SiteGround Optimizer.
+		}
+		do_action( 'litespeed_purge_all' ); // LiteSpeed Cache (no-op when absent).
+		do_action( 'breeze_clear_all_cache' ); // Breeze (Cloudways), likewise.
+		do_action( 'digitizer_cookie_consent_purge_caches' ); // Custom hosts/CDNs can hook here.
+		do_action( 'dpt_cb_purge_caches' ); // The module's name, for site code written against it.
+	}
+
+	/**
+	 * Sanitize the submitted texts[<lang>][<key>] structure, merging into
+	 * the currently saved texts. Only submitted languages/keys change.
+	 */
+	private static function sanitize_texts( $raw_texts, $clean ) {
+		$texts = ( isset( $clean['texts'] ) && is_array( $clean['texts'] ) ) ? $clean['texts'] : array();
+		if ( ! is_array( $raw_texts ) ) {
+			return $texts;
+		}
+		$known_langs = isset( $clean['languages'] ) && is_array( $clean['languages'] ) ? $clean['languages'] : array();
+		$text_keys   = self::text_keys();
+		$html_keys   = self::html_text_keys();
+
+		foreach ( $raw_texts as $lang => $fields ) {
+			$lang = self::normalize_lang_code( $lang );
+			if ( '' === $lang || ! in_array( $lang, $known_langs, true ) || ! is_array( $fields ) ) {
+				continue;
+			}
+			if ( ! isset( $texts[ $lang ] ) || ! is_array( $texts[ $lang ] ) ) {
+				$texts[ $lang ] = array();
+			}
+			foreach ( $fields as $key => $value ) {
+				if ( ! in_array( $key, $text_keys, true ) || is_array( $value ) ) {
+					continue;
+				}
+				$value = wp_unslash( $value );
+				if ( in_array( $key, $html_keys, true ) ) {
+					$texts[ $lang ][ $key ] = wp_kses_post( $value );
+				} else {
+					$texts[ $lang ][ $key ] = sanitize_text_field( $value );
+				}
+			}
+		}
+		return $texts;
+	}
+}

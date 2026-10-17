@@ -22,7 +22,7 @@ cd "$ROOT"
 mkdir -p "$STAGE/$SLUG"
 while IFS= read -r -d '' f; do
 	case "$f" in
-		.github/*|.wordpress-org/*|design/*|bin/*|dist/*|docs/*|tests/*|.distignore|.gitignore|*.code-workspace) continue ;;
+		.github/*|.wordpress-org/*|design/*|bin/*|dist/*|docs/*|tests/*|port/*|.distignore|.gitignore|*.code-workspace) continue ;;
 	esac
 	mkdir -p "$STAGE/$SLUG/$(dirname "$f")"
 	cp "$f" "$STAGE/$SLUG/$f"

@@ -1366,3 +1366,47 @@ define( 'DIGITIZER_COOKIE_CONSENT_VERSION', '1.0.0' );
 define( 'DIGITIZER_COOKIE_CONSENT_FILE', dirname( __DIR__ ) . '/digitizer-cookie-consent.php' );
 define( 'DIGITIZER_COOKIE_CONSENT_PATH', dirname( __DIR__ ) . '/' );
 define( 'DIGITIZER_COOKIE_CONSENT_URL', 'https://example.test/wp-content/plugins/digitizer-cookie-consent/' );
+
+// Inline output through the core APIs (the plugin prints no raw <script>/<style>).
+$GLOBALS['dpt_stub_inline_styles'] = array();
+function wp_print_inline_script_tag( $js, $attributes = array() ) {
+	$attr = '';
+	foreach ( $attributes as $k => $v ) {
+		$attr .= true === $v ? ' ' . $k : ' ' . $k . '="' . htmlspecialchars( (string) $v, ENT_QUOTES ) . '"';
+	}
+	echo '<script' . $attr . ">\n" . $js . "\n</script>\n";
+}
+if ( ! function_exists( 'wp_register_style' ) ) { function wp_register_style( $h, $src = false, $deps = array(), $ver = false ) { return true; } }
+if ( ! function_exists( 'wp_enqueue_style' ) ) { function wp_enqueue_style( $h, $src = '', $deps = array(), $ver = false ) {} }
+function wp_add_inline_style( $handle, $css ) { $GLOBALS['dpt_stub_inline_styles'][ $handle ][] = $css; return true; }
+if ( ! function_exists( 'wp_enqueue_script' ) ) { function wp_enqueue_script( $h, $src = '', $deps = array(), $ver = false, $footer = false ) { $GLOBALS['dpt_stub_scripts'][ $h ] = $deps; } }
+if ( ! function_exists( 'wp_localize_script' ) ) { function wp_localize_script( $h, $name, $data ) { $GLOBALS['dpt_stub_localized'][ $h ] = array( $name, $data ); return true; } }
+if ( ! function_exists( 'wp_is_mobile' ) ) { function wp_is_mobile() { return false; } }
+function plugin_basename( $f ) { return basename( dirname( $f ) ) . '/' . basename( $f ); }
+
+// Lifecycle stubs for the standalone's core and uninstall.
+if ( ! function_exists( 'add_option' ) ) {
+	function add_option( $name, $value = '' ) {
+		if ( isset( $GLOBALS['dpt_stub_options'][ $name ] ) ) { return false; }
+		$GLOBALS['dpt_stub_options'][ $name ] = $value;
+		return true;
+	}
+}
+if ( ! function_exists( 'delete_option' ) ) {
+	function delete_option( $name ) { unset( $GLOBALS['dpt_stub_options'][ $name ] ); return true; }
+}
+if ( ! function_exists( 'get_sites' ) ) { function get_sites( $args = array() ) { return array(); } }
+if ( ! function_exists( 'switch_to_blog' ) ) { function switch_to_blog( $id ) { return true; } }
+if ( ! function_exists( 'restore_current_blog' ) ) { function restore_current_blog() { return true; } }
+if ( ! function_exists( 'get_bloginfo' ) ) { function get_bloginfo( $show = '' ) { return 'version' === $show ? '6.8' : ''; } }
+if ( ! function_exists( 'sanitize_hex_color' ) ) {
+	function sanitize_hex_color( $c ) { return preg_match( '/^#([A-Fa-f0-9]{3}){1,2}$/', (string) $c ) ? (string) $c : null; }
+}
+if ( ! function_exists( 'get_locale' ) ) { function get_locale() { return isset( $GLOBALS['dpt_stub_locale'] ) ? $GLOBALS['dpt_stub_locale'] : 'he_IL'; } }
+if ( ! function_exists( 'esc_html_e' ) ) { function esc_html_e( $t, $d = null ) { echo esc_html( $t ); } }
+// Form helpers the settings screen prints with.
+if ( ! function_exists( 'checked' ) ) { function checked( $a, $b = true, $echo = true ) { $r = (string) $a === (string) $b ? " checked='checked'" : ''; if ( $echo ) { echo $r; } return $r; } }
+if ( ! function_exists( 'selected' ) ) { function selected( $a, $b = true, $echo = true ) { $r = (string) $a === (string) $b ? " selected='selected'" : ''; if ( $echo ) { echo $r; } return $r; } }
+if ( ! function_exists( 'esc_textarea' ) ) { function esc_textarea( $t ) { return htmlspecialchars( (string) $t, ENT_QUOTES, 'UTF-8' ); } }
+if ( ! function_exists( 'esc_attr_e' ) ) { function esc_attr_e( $t, $d = null ) { echo esc_attr( $t ); } }
+if ( ! function_exists( 'wp_nonce_field' ) ) { function wp_nonce_field( $a = -1 ) { echo '<input type="hidden" name="_wpnonce" value="n" />'; } }

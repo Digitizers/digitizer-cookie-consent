@@ -1,0 +1,1439 @@
+<?php
+/**
+ * Cookie Banner module - admin settings page (8 tabs + language switcher).
+ */
+
+if ( ! defined( 'ABSPATH' ) ) { exit; }
+
+class Digitizer_Cookie_Consent_Admin {
+
+	const PAGE_SLUG = 'dpt-cookie-banner';
+	const NONCE     = 'dpt_cb_settings_nonce';
+
+	public function __construct() {
+		add_action( 'admin_post_digitizer_cc_save',        array( $this, 'handle_save' ) );
+		add_action( 'admin_post_digitizer_cc_add_lang',    array( $this, 'handle_add_lang' ) );
+		add_action( 'admin_post_digitizer_cc_remove_lang', array( $this, 'handle_remove_lang' ) );
+		add_action( 'admin_notices',                 array( $this, 'maybe_show_notices' ) );
+	}
+
+	/**
+	 * Called by DPT_Admin on admin_menu.
+	 */
+	public function register_menu( $parent_slug ) {
+		add_submenu_page(
+			$parent_slug,
+			__( 'Cookie Banner', 'digitizer-cookie-consent' ),
+			__( 'Cookie Banner', 'digitizer-cookie-consent' ),
+			'manage_options',
+			self::PAGE_SLUG,
+			array( $this, 'render_page' )
+		);
+	}
+
+	/**
+	 * The flags below are set by our own post-save redirects and only choose
+	 * which confirmation notice to draw. Nothing is read out of them and no
+	 * state changes, so there is no nonce to verify.
+	 */
+	// phpcs:disable WordPress.Security.NonceVerification.Recommended -- Read-only display flags from our own redirect.
+	public function maybe_show_notices() {
+		if ( self::PAGE_SLUG !== self::current_page() ) {
+			return;
+		}
+		if ( isset( $_GET['dpt_saved'] ) ) {
+			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Settings saved.', 'digitizer-cookie-consent' ) . '</p></div>';
+		}
+		if ( isset( $_GET['dpt_lang_added'] ) ) {
+			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Language added.', 'digitizer-cookie-consent' ) . '</p></div>';
+		}
+		if ( isset( $_GET['dpt_lang_removed'] ) ) {
+			echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__( 'Language removed.', 'digitizer-cookie-consent' ) . '</p></div>';
+		}
+		if ( isset( $_GET['dpt_lang_error'] ) ) {
+			echo '<div class="notice notice-error is-dismissible"><p>' . esc_html__( 'Invalid language code. Use formats like "en", "ru" or "pt_BR".', 'digitizer-cookie-consent' ) . '</p></div>';
+		}
+	}
+	// phpcs:enable WordPress.Security.NonceVerification.Recommended
+
+	/* ============================================================
+	 *  POST handlers
+	 * ============================================================ */
+
+	public function handle_save() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You are not allowed to do that.', 'digitizer-cookie-consent' ) );
+		}
+		check_admin_referer( self::NONCE );
+
+		// Pass the raw POST array: Digitizer_Cookie_Consent_Settings::save() unslashes and
+		// sanitizes each field itself, so unslashing here would double-unslash
+		// text fields (a literal "C:\docs" would lose its backslash).
+		$data = isset( $_POST['dpt_cb'] ) && is_array( $_POST['dpt_cb'] ) ? $_POST['dpt_cb'] : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- Sanitized per field in Digitizer_Cookie_Consent_Settings::save().
+		Digitizer_Cookie_Consent_Settings::save( $data );
+
+		$tab  = isset( $_POST['current_tab'] ) ? sanitize_key( wp_unslash( $_POST['current_tab'] ) ) : 'general';
+		$args = array(
+			'page'      => self::PAGE_SLUG,
+			'tab'       => $tab,
+			'dpt_saved' => 1,
+		);
+		if ( isset( $_POST['current_lang'] ) ) {
+			$lang = Digitizer_Cookie_Consent_Settings::normalize_lang_code( wp_unslash( $_POST['current_lang'] ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- normalize_lang_code() rejects anything but a locale code.
+			if ( $lang ) {
+				$args['lang'] = $lang;
+			}
+		}
+		wp_safe_redirect( add_query_arg( $args, admin_url( 'admin.php' ) ) );
+		exit;
+	}
+
+	public function handle_add_lang() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You are not allowed to do that.', 'digitizer-cookie-consent' ) );
+		}
+		check_admin_referer( 'digitizer_cc_add_lang' );
+
+		$code  = isset( $_POST['dpt_new_lang'] ) ? wp_unslash( $_POST['dpt_new_lang'] ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- add_language() validates the code and rejects anything else.
+		$added = Digitizer_Cookie_Consent_Settings::add_language( $code );
+
+		$args = array( 'page' => self::PAGE_SLUG, 'tab' => 'texts' );
+		if ( $added ) {
+			$args['lang']           = $added;
+			$args['dpt_lang_added'] = 1;
+		} else {
+			$args['dpt_lang_error'] = 1;
+		}
+		wp_safe_redirect( add_query_arg( $args, admin_url( 'admin.php' ) ) );
+		exit;
+	}
+
+	public function handle_remove_lang() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You are not allowed to do that.', 'digitizer-cookie-consent' ) );
+		}
+		check_admin_referer( 'digitizer_cc_remove_lang' );
+
+		$code = isset( $_POST['dpt_remove_lang'] ) ? Digitizer_Cookie_Consent_Settings::normalize_lang_code( wp_unslash( $_POST['dpt_remove_lang'] ) ) : ''; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- normalize_lang_code() rejects anything but a locale code.
+		$args = array( 'page' => self::PAGE_SLUG, 'tab' => 'texts' );
+		if ( $code && Digitizer_Cookie_Consent_Settings::remove_language( $code ) ) {
+			$args['dpt_lang_removed'] = 1;
+		} else {
+			$args['dpt_lang_error'] = 1;
+		}
+		wp_safe_redirect( add_query_arg( $args, admin_url( 'admin.php' ) ) );
+		exit;
+	}
+
+	/* ============================================================
+	 *  Page
+	 * ============================================================ */
+
+	public function render_page() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		$opts        = Digitizer_Cookie_Consent_Settings::all();
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only tab selection, not a state change.
+		$current_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : 'general';
+		$tabs        = array(
+			'general'    => __( 'General', 'digitizer-cookie-consent' ),
+			'texts'      => __( 'Texts', 'digitizer-cookie-consent' ),
+			'design'     => __( 'Design', 'digitizer-cookie-consent' ),
+			'typography' => __( 'Typography', 'digitizer-cookie-consent' ),
+			'buttons'    => __( 'Buttons', 'digitizer-cookie-consent' ),
+			'categories' => __( 'Categories', 'digitizer-cookie-consent' ),
+			'scripts'    => __( 'Scripts', 'digitizer-cookie-consent' ),
+			'floating'   => __( 'Floating Button', 'digitizer-cookie-consent' ),
+		);
+
+		$current_lang = $this->current_lang( $opts );
+		?>
+		<div class="wrap dpt-wrap">
+			<h1 class="dpt-title">
+				<span class="dashicons dashicons-privacy"></span>
+				<?php esc_html_e( 'Cookie Banner', 'digitizer-cookie-consent' ); ?>
+				<span class="dpt-version">v<?php echo esc_html( DIGITIZER_COOKIE_CONSENT_VERSION ); ?></span>
+			</h1>
+
+			<h2 class="nav-tab-wrapper dpt-tabs">
+				<?php foreach ( $tabs as $key => $label ) : ?>
+					<a href="<?php echo esc_url( add_query_arg( array( 'page' => self::PAGE_SLUG, 'tab' => $key ), admin_url( 'admin.php' ) ) ); ?>"
+					   class="nav-tab <?php echo $current_tab === $key ? 'nav-tab-active' : ''; ?>">
+						<?php echo esc_html( $label ); ?>
+					</a>
+				<?php endforeach; ?>
+			</h2>
+
+			<div class="dpt-layout">
+				<div class="dpt-main">
+					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+						<input type="hidden" name="action" value="digitizer_cc_save" />
+						<input type="hidden" name="current_tab" value="<?php echo esc_attr( $current_tab ); ?>" />
+						<?php if ( 'texts' === $current_tab ) : ?>
+							<input type="hidden" name="current_lang" value="<?php echo esc_attr( $current_lang ); ?>" />
+						<?php endif; ?>
+						<?php wp_nonce_field( self::NONCE ); ?>
+
+						<div class="dpt-panel">
+							<?php $this->render_tab( $current_tab, $opts, $current_lang ); ?>
+						</div>
+
+						<p class="dpt-actions">
+							<button type="submit" class="button button-primary button-hero"><?php esc_html_e( 'Save Settings', 'digitizer-cookie-consent' ); ?></button>
+						</p>
+					</form>
+
+					<?php if ( 'texts' === $current_tab ) : ?>
+						<?php $this->render_language_manager( $opts, $current_lang ); ?>
+					<?php endif; ?>
+				</div>
+
+				<aside class="dpt-sidebar">
+					<?php $this->render_preview( $opts, $current_lang ); ?>
+				</aside>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * The language being edited on the Texts tab.
+	 */
+	private function current_lang( $opts ) {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Read-only language selection; normalize_lang_code() rejects anything but a locale code.
+		$lang = isset( $_GET['lang'] ) ? Digitizer_Cookie_Consent_Settings::normalize_lang_code( wp_unslash( $_GET['lang'] ) ) : '';
+		if ( $lang && in_array( $lang, $opts['languages'], true ) ) {
+			return $lang;
+		}
+		return $opts['default_lang'];
+	}
+
+	/**
+	 * Human-readable label for a language code.
+	 */
+	private function lang_label( $code ) {
+		$names = array(
+			'he' => __( 'Hebrew', 'digitizer-cookie-consent' ),
+			'en' => __( 'English', 'digitizer-cookie-consent' ),
+			'ar' => __( 'Arabic', 'digitizer-cookie-consent' ),
+			'ru' => __( 'Russian', 'digitizer-cookie-consent' ),
+			'fr' => __( 'French', 'digitizer-cookie-consent' ),
+			'es' => __( 'Spanish', 'digitizer-cookie-consent' ),
+			'de' => __( 'German', 'digitizer-cookie-consent' ),
+		);
+		$short = strtolower( substr( $code, 0, (int) strcspn( $code, '_' ) ) );
+		if ( isset( $names[ $code ] ) ) {
+			return $names[ $code ] . ' (' . $code . ')';
+		}
+		if ( isset( $names[ $short ] ) ) {
+			return $names[ $short ] . ' (' . $code . ')';
+		}
+		return $code;
+	}
+
+	private function render_tab( $tab, $opts, $current_lang ) {
+		switch ( $tab ) {
+			case 'texts':      $this->tab_texts( $opts, $current_lang ); break;
+			case 'design':     $this->tab_design( $opts );     break;
+			case 'typography': $this->tab_typography( $opts ); break;
+			case 'buttons':    $this->tab_buttons( $opts );    break;
+			case 'categories': $this->tab_categories( $opts ); break;
+			case 'scripts':    $this->tab_scripts( $opts );    break;
+			case 'floating':   $this->tab_floating( $opts );   break;
+			case 'general':
+			default:           $this->tab_general( $opts );    break;
+		}
+	}
+
+	/**
+	 * Toggle switch markup (hidden input keeps unchecked boxes submitted).
+	 */
+	private function switch_field( $name, $checked ) {
+		?>
+		<label class="dpt-switch">
+			<input type="hidden" name="dpt_cb[<?php echo esc_attr( $name ); ?>]" value="0" />
+			<input type="checkbox" name="dpt_cb[<?php echo esc_attr( $name ); ?>]" value="1" <?php checked( $checked, '1' ); ?> />
+			<span class="dpt-switch-slider"></span>
+		</label>
+		<?php
+	}
+
+	/* ============================================================
+	 *  TABS
+	 * ============================================================ */
+
+	private function tab_general( $o ) {
+		?>
+		<h2><span class="dashicons dashicons-admin-generic"></span> <?php esc_html_e( 'General Settings', 'digitizer-cookie-consent' ); ?></h2>
+		<table class="form-table dpt-form">
+			<tr>
+				<th><?php esc_html_e( 'Enable banner', 'digitizer-cookie-consent' ); ?></th>
+				<td>
+					<?php $this->switch_field( 'enabled', $o['enabled'] ); ?>
+					<span class="description"><?php esc_html_e( 'When disabled, the banner is not shown at all.', 'digitizer-cookie-consent' ); ?></span>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_position"><?php esc_html_e( 'Banner position', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<?php
+					$positions = array(
+						'bottom'       => __( 'Full-width bar at the bottom', 'digitizer-cookie-consent' ),
+						'top'          => __( 'Full-width bar at the top', 'digitizer-cookie-consent' ),
+						'center'       => __( 'Centered modal', 'digitizer-cookie-consent' ),
+						'bottom-left'  => __( 'Bottom-left corner', 'digitizer-cookie-consent' ),
+						'bottom-right' => __( 'Bottom-right corner', 'digitizer-cookie-consent' ),
+					);
+					?>
+					<select id="dpt_cb_position" name="dpt_cb[position]">
+						<?php foreach ( $positions as $k => $l ) : ?>
+							<option value="<?php echo esc_attr( $k ); ?>" <?php selected( $o['position'], $k ); ?>><?php echo esc_html( $l ); ?></option>
+						<?php endforeach; ?>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_animation"><?php esc_html_e( 'Entry animation', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<?php
+					$anims = array(
+						'slide-up'   => __( 'Slide up', 'digitizer-cookie-consent' ),
+						'slide-down' => __( 'Slide down', 'digitizer-cookie-consent' ),
+						'fade'       => __( 'Fade', 'digitizer-cookie-consent' ),
+						'zoom'       => __( 'Zoom', 'digitizer-cookie-consent' ),
+						'none'       => __( 'None', 'digitizer-cookie-consent' ),
+					);
+					?>
+					<select id="dpt_cb_animation" name="dpt_cb[animation]">
+						<?php foreach ( $anims as $k => $l ) : ?>
+							<option value="<?php echo esc_attr( $k ); ?>" <?php selected( $o['animation'], $k ); ?>><?php echo esc_html( $l ); ?></option>
+						<?php endforeach; ?>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<th><?php esc_html_e( 'Show on mobile', 'digitizer-cookie-consent' ); ?></th>
+				<td><?php $this->switch_field( 'show_on_mobile', $o['show_on_mobile'] ); ?></td>
+			</tr>
+			<tr>
+				<th><?php esc_html_e( 'Accept on scroll', 'digitizer-cookie-consent' ); ?></th>
+				<td>
+					<?php $this->switch_field( 'auto_accept_scroll', $o['auto_accept_scroll'] ); ?>
+					<p class="description"><?php esc_html_e( 'Not recommended for GDPR - EU law requires active consent.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><?php esc_html_e( 'Block scripts until consent', 'digitizer-cookie-consent' ); ?></th>
+				<td>
+					<?php $this->switch_field( 'block_scripts', $o['block_scripts'] ); ?>
+					<p class="description"><?php esc_html_e( 'Scripts from the "Scripts" tab load only after the visitor consents to the matching category.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><?php esc_html_e( 'Google Consent Mode v2', 'digitizer-cookie-consent' ); ?></th>
+				<td>
+					<?php $this->switch_field( 'consent_mode', $o['consent_mode'] ); ?>
+					<p class="description"><?php esc_html_e( 'Tells Google tags (Analytics, Ads, Tag Manager) what the visitor allowed: analytics grants analytics storage, marketing grants ad storage, ad user data and ad personalization, functional grants personalization storage. These start denied until the visitor chooses; functionality and security storage, the essential kind, are always granted.', 'digitizer-cookie-consent' ); ?></p>
+					<p class="description"><?php esc_html_e( 'Google tags pasted in the "Scripts" tab still load only after consent. Google tags added any other way (Site Kit, a GTM plugin, the theme) load at once and follow these signals.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><?php esc_html_e( 'WP Consent API', 'digitizer-cookie-consent' ); ?></th>
+				<td>
+					<?php $this->switch_field( 'wp_consent_api', $o['wp_consent_api'] ); ?>
+					<p class="description"><?php esc_html_e( 'Shares the visitor\'s choice with plugins that read the WP Consent API, such as Site Kit and WooCommerce order attribution.', 'digitizer-cookie-consent' ); ?></p>
+					<?php if ( ! Digitizer_Cookie_Consent_Frontend::signals_possible( $o ) && ( '1' === $o['consent_mode'] || '1' === $o['wp_consent_api'] ) ) : ?>
+						<p class="description"><strong><?php esc_html_e( 'Consent Mode and the WP Consent API are not sent while the banner is off or hidden on mobile: visitors who cannot see the banner could never grant anything.', 'digitizer-cookie-consent' ); ?></strong></p>
+					<?php endif; ?>
+					<?php if ( ! Digitizer_Cookie_Consent_Frontend::wp_consent_api_present() ) : ?>
+						<p class="description"><strong><?php esc_html_e( 'The WP Consent API plugin is not active on this site, so this switch has no effect until it is.', 'digitizer-cookie-consent' ); ?></strong></p>
+					<?php endif; ?>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_consent_days"><?php esc_html_e( 'Consent lifetime (days)', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<input type="number" min="1" max="730" id="dpt_cb_consent_days" name="dpt_cb[consent_days]" value="<?php echo esc_attr( $o['consent_days'] ); ?>" />
+					<p class="description"><?php esc_html_e( 'After this many days the visitor is asked again.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_consent_version"><?php esc_html_e( 'Consent version', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<input type="number" min="1" step="1" id="dpt_cb_consent_version" name="dpt_cb[consent_version]" value="<?php echo esc_attr( $o['consent_version'] ); ?>" />
+					<p class="description"><?php esc_html_e( 'Increase this number to ask ALL visitors for consent again (for example after changing your cookie policy). Popular page caches (WP Rocket, LiteSpeed, Super Cache, W3TC, Fastest Cache, SiteGround) are purged automatically when it changes.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_show_delay"><?php esc_html_e( 'Show delay (seconds)', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<input type="number" min="0" max="120" step="1" id="dpt_cb_show_delay" name="dpt_cb[show_delay]" value="<?php echo esc_attr( $o['show_delay'] ); ?>" />
+					<p class="description"><?php esc_html_e( '0 = show immediately. 5 = show after 5 seconds, so the banner does not interrupt visitors right away.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+		</table>
+		<?php
+	}
+
+	/**
+	 * Texts tab: language sub-tabs + per-language fields.
+	 */
+	private function tab_texts( $o, $lang ) {
+		$texts    = isset( $o['texts'][ $lang ] ) ? $o['texts'][ $lang ] : Digitizer_Cookie_Consent_Settings::default_texts( $lang );
+		$defaults = Digitizer_Cookie_Consent_Settings::default_texts( $lang );
+		$n        = 'dpt_cb[texts][' . $lang . ']';
+		?>
+		<h2><span class="dashicons dashicons-edit"></span> <?php esc_html_e( 'Texts', 'digitizer-cookie-consent' ); ?></h2>
+		<p class="description dpt-big-desc"><?php esc_html_e( 'The banner picks the language automatically from the current page locale (WPML / Polylang / TranslatePress compatible), falling back to the default language.', 'digitizer-cookie-consent' ); ?></p>
+
+		<div class="nav-tab-wrapper dpt-lang-tabs">
+			<?php foreach ( $o['languages'] as $code ) : ?>
+				<a href="<?php echo esc_url( add_query_arg( array( 'page' => self::PAGE_SLUG, 'tab' => 'texts', 'lang' => $code ), admin_url( 'admin.php' ) ) ); ?>"
+				   class="nav-tab <?php echo $lang === $code ? 'nav-tab-active' : ''; ?>">
+					<?php echo esc_html( $this->lang_label( $code ) ); ?>
+					<?php if ( $code === $o['default_lang'] ) : ?>
+						<span class="dpt-default-badge"><?php esc_html_e( 'default', 'digitizer-cookie-consent' ); ?></span>
+					<?php endif; ?>
+				</a>
+			<?php endforeach; ?>
+		</div>
+
+		<table class="form-table dpt-form">
+			<tr>
+				<th><label for="dpt_cb_title"><?php esc_html_e( 'Banner title', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="text" id="dpt_cb_title" name="<?php echo esc_attr( $n ); ?>[title]" value="<?php echo esc_attr( $texts['title'] ); ?>" class="large-text" placeholder="<?php echo esc_attr( $defaults['title'] ); ?>" /></td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_message"><?php esc_html_e( 'Banner message', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<textarea id="dpt_cb_message" name="<?php echo esc_attr( $n ); ?>[message]" rows="5" class="large-text"><?php echo esc_textarea( $texts['message'] ); ?></textarea>
+					<p class="description"><?php esc_html_e( 'Basic HTML is allowed: <strong>, <em>, <a>, <br>', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_btn_accept"><?php esc_html_e( '"Accept all" button', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="text" id="dpt_cb_btn_accept" name="<?php echo esc_attr( $n ); ?>[btn_accept_text]" value="<?php echo esc_attr( $texts['btn_accept_text'] ); ?>" /></td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_btn_reject"><?php esc_html_e( '"Reject all" button', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="text" id="dpt_cb_btn_reject" name="<?php echo esc_attr( $n ); ?>[btn_reject_text]" value="<?php echo esc_attr( $texts['btn_reject_text'] ); ?>" /></td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_btn_settings"><?php esc_html_e( '"Settings" button', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="text" id="dpt_cb_btn_settings" name="<?php echo esc_attr( $n ); ?>[btn_settings_text]" value="<?php echo esc_attr( $texts['btn_settings_text'] ); ?>" /></td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_btn_save"><?php esc_html_e( '"Save preferences" button', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="text" id="dpt_cb_btn_save" name="<?php echo esc_attr( $n ); ?>[btn_save_text]" value="<?php echo esc_attr( $texts['btn_save_text'] ); ?>" /></td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_settings_view_title"><?php esc_html_e( 'Preferences screen title', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="text" id="dpt_cb_settings_view_title" name="<?php echo esc_attr( $n ); ?>[settings_view_title]" value="<?php echo esc_attr( $texts['settings_view_title'] ); ?>" class="large-text" /></td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_always_on"><?php esc_html_e( '"Always active" label', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="text" id="dpt_cb_always_on" name="<?php echo esc_attr( $n ); ?>[always_on_label]" value="<?php echo esc_attr( $texts['always_on_label'] ); ?>" /></td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_close_aria"><?php esc_html_e( 'Close button label (accessibility)', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="text" id="dpt_cb_close_aria" name="<?php echo esc_attr( $n ); ?>[close_aria]" value="<?php echo esc_attr( $texts['close_aria'] ); ?>" /></td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_policy_text"><?php esc_html_e( 'Privacy policy link text', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="text" id="dpt_cb_policy_text" name="<?php echo esc_attr( $n ); ?>[policy_text]" value="<?php echo esc_attr( $texts['policy_text'] ); ?>" /></td>
+			</tr>
+		</table>
+
+		<h3 class="dpt-section-heading"><span class="dashicons dashicons-category"></span> <?php esc_html_e( 'Category names and descriptions', 'digitizer-cookie-consent' ); ?> (<?php echo esc_html( $this->lang_label( $lang ) ); ?>)</h3>
+		<table class="form-table dpt-form">
+			<tr>
+				<th><label><?php esc_html_e( 'Essential - name', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="text" name="<?php echo esc_attr( $n ); ?>[cat_essential_name]" value="<?php echo esc_attr( $texts['cat_essential_name'] ); ?>" /></td>
+			</tr>
+			<tr>
+				<th><label><?php esc_html_e( 'Essential - description', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><textarea name="<?php echo esc_attr( $n ); ?>[cat_essential_desc]" rows="2" class="large-text"><?php echo esc_textarea( $texts['cat_essential_desc'] ); ?></textarea></td>
+			</tr>
+			<tr>
+				<th><label><?php esc_html_e( 'Functional - name', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="text" name="<?php echo esc_attr( $n ); ?>[cat_functional_name]" value="<?php echo esc_attr( $texts['cat_functional_name'] ); ?>" /></td>
+			</tr>
+			<tr>
+				<th><label><?php esc_html_e( 'Functional - description', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><textarea name="<?php echo esc_attr( $n ); ?>[cat_functional_desc]" rows="2" class="large-text"><?php echo esc_textarea( $texts['cat_functional_desc'] ); ?></textarea></td>
+			</tr>
+			<tr>
+				<th><label><?php esc_html_e( 'Analytics - name', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="text" name="<?php echo esc_attr( $n ); ?>[cat_analytics_name]" value="<?php echo esc_attr( $texts['cat_analytics_name'] ); ?>" /></td>
+			</tr>
+			<tr>
+				<th><label><?php esc_html_e( 'Analytics - description', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><textarea name="<?php echo esc_attr( $n ); ?>[cat_analytics_desc]" rows="2" class="large-text"><?php echo esc_textarea( $texts['cat_analytics_desc'] ); ?></textarea></td>
+			</tr>
+			<tr>
+				<th><label><?php esc_html_e( 'Marketing - name', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="text" name="<?php echo esc_attr( $n ); ?>[cat_marketing_name]" value="<?php echo esc_attr( $texts['cat_marketing_name'] ); ?>" /></td>
+			</tr>
+			<tr>
+				<th><label><?php esc_html_e( 'Marketing - description', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><textarea name="<?php echo esc_attr( $n ); ?>[cat_marketing_desc]" rows="2" class="large-text"><?php echo esc_textarea( $texts['cat_marketing_desc'] ); ?></textarea></td>
+			</tr>
+		</table>
+
+		<h3 class="dpt-section-heading"><span class="dashicons dashicons-sticky"></span> <?php esc_html_e( 'Floating button texts', 'digitizer-cookie-consent' ); ?></h3>
+		<table class="form-table dpt-form">
+			<tr>
+				<th><label><?php esc_html_e( 'Button content', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<input type="text" name="<?php echo esc_attr( $n ); ?>[float_button_text]" value="<?php echo esc_attr( $texts['float_button_text'] ); ?>" />
+					<p class="description"><?php esc_html_e( 'Leave empty for the built-in cookie icon, or type short text of your own.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label><?php esc_html_e( 'Button label (accessibility)', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="text" name="<?php echo esc_attr( $n ); ?>[float_button_aria]" value="<?php echo esc_attr( $texts['float_button_aria'] ); ?>" /></td>
+			</tr>
+		</table>
+
+		<h3 class="dpt-section-heading"><span class="dashicons dashicons-admin-links"></span> <?php esc_html_e( 'Privacy policy link (shared for all languages)', 'digitizer-cookie-consent' ); ?></h3>
+		<table class="form-table dpt-form">
+			<tr>
+				<th><label for="dpt_cb_policy_page_id"><?php esc_html_e( 'Privacy policy page', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<?php
+					wp_dropdown_pages( array(
+						'name'              => 'dpt_cb[policy_page_id]',
+						'id'                => 'dpt_cb_policy_page_id',
+						'show_option_none'  => esc_html__( '— No link —', 'digitizer-cookie-consent' ),
+						'option_none_value' => '0',
+						'selected'          => (int) $o['policy_page_id'],
+					) );
+					?>
+					<p class="description"><?php esc_html_e( 'Pick the privacy policy page. With WPML or Polylang, the translated page is linked automatically per language.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_policy_url"><?php esc_html_e( 'Or an external URL (instead of a page)', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<input type="url" id="dpt_cb_policy_url" name="dpt_cb[policy_url]" value="<?php echo esc_attr( $o['policy_url'] ); ?>" class="large-text" placeholder="https://..." />
+					<p class="description"><?php esc_html_e( 'Only if the policy lives outside this site. Leave empty when a page is selected above.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><?php esc_html_e( 'Link at the end of the message', 'digitizer-cookie-consent' ); ?></th>
+				<td>
+					<?php $this->switch_field( 'policy_inline', $o['policy_inline'] ); ?>
+					<p class="description"><?php esc_html_e( 'Off puts the link on a line of its own under the message.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_policy_link_color"><?php esc_html_e( 'Link color', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<input type="text" class="dpt-color" id="dpt_cb_policy_link_color" name="dpt_cb[policy_link_color]" value="<?php echo esc_attr( $o['policy_link_color'] ); ?>" data-default-color="" />
+					<p class="description"><?php esc_html_e( 'Empty = the color of the text around it.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><?php esc_html_e( 'A link that reopens the banner', 'digitizer-cookie-consent' ); ?></th>
+				<td>
+					<code>#dpt-cookie-settings</code> &nbsp; <code>[dpt_cookie_settings]</code>
+					<p class="description"><?php esc_html_e( 'Any link to #dpt-cookie-settings, or any element with the class dpt-cb-open, opens the banner so a visitor can change their choice - for example a footer link instead of the floating button. The shortcode prints such a link; text="..." sets its wording.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_default_lang"><?php esc_html_e( 'Default language', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<select id="dpt_cb_default_lang" name="dpt_cb[default_lang]">
+						<?php foreach ( $o['languages'] as $code ) : ?>
+							<option value="<?php echo esc_attr( $code ); ?>" <?php selected( $o['default_lang'], $code ); ?>><?php echo esc_html( $this->lang_label( $code ) ); ?></option>
+						<?php endforeach; ?>
+					</select>
+					<p class="description"><?php esc_html_e( 'Used when the page locale has no matching language.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+		</table>
+		<?php
+	}
+
+	/**
+	 * Add / remove language forms (outside the main save form).
+	 */
+	private function render_language_manager( $o, $current_lang ) {
+		?>
+		<div class="dpt-panel dpt-lang-manager">
+			<h3><?php esc_html_e( 'Manage languages', 'digitizer-cookie-consent' ); ?></h3>
+			<div class="dpt-lang-manager-forms">
+				<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="dpt-inline-form">
+					<input type="hidden" name="action" value="digitizer_cc_add_lang" />
+					<?php wp_nonce_field( 'digitizer_cc_add_lang' ); ?>
+					<label for="dpt_new_lang"><?php esc_html_e( 'Add language (code):', 'digitizer-cookie-consent' ); ?></label>
+					<input type="text" id="dpt_new_lang" name="dpt_new_lang" placeholder="ru / fr / pt_BR" maxlength="6" />
+					<button type="submit" class="button"><?php esc_html_e( 'Add', 'digitizer-cookie-consent' ); ?></button>
+				</form>
+
+				<?php if ( $current_lang !== $o['default_lang'] ) : ?>
+					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" class="dpt-inline-form"
+					      onsubmit="return confirm('<?php echo esc_js( __( 'Remove this language and its texts?', 'digitizer-cookie-consent' ) ); ?>');">
+						<input type="hidden" name="action" value="digitizer_cc_remove_lang" />
+						<input type="hidden" name="dpt_remove_lang" value="<?php echo esc_attr( $current_lang ); ?>" />
+						<?php wp_nonce_field( 'digitizer_cc_remove_lang' ); ?>
+						<button type="submit" class="button button-link-delete">
+							<?php
+							/* translators: %s: language label */
+							printf( esc_html__( 'Remove "%s"', 'digitizer-cookie-consent' ), esc_html( $this->lang_label( $current_lang ) ) );
+							?>
+						</button>
+					</form>
+				<?php endif; ?>
+			</div>
+			<p class="description"><?php esc_html_e( 'New languages start with the English texts. The default language cannot be removed.', 'digitizer-cookie-consent' ); ?></p>
+		</div>
+		<?php
+	}
+
+	private function tab_design( $o ) {
+		?>
+		<h2><span class="dashicons dashicons-admin-appearance"></span> <?php esc_html_e( 'Banner Design', 'digitizer-cookie-consent' ); ?></h2>
+
+		<?php
+		$elementor_font = Digitizer_Cookie_Consent_Settings::elementor_primary_font();
+		$font_modes     = array(
+			'inherit'   => __( 'Inherit from the site (recommended)', 'digitizer-cookie-consent' ),
+			'elementor' => __( 'Elementor primary font', 'digitizer-cookie-consent' ),
+			'custom'    => __( 'Custom font stack', 'digitizer-cookie-consent' ),
+		);
+		?>
+		<h3 class="dpt-section-heading"><span class="dashicons dashicons-editor-textcolor"></span> <?php esc_html_e( 'Font', 'digitizer-cookie-consent' ); ?></h3>
+		<table class="form-table dpt-form">
+			<tr>
+				<th><label for="dpt_cb_font_family"><?php esc_html_e( 'Font family', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<select id="dpt_cb_font_family" name="dpt_cb[font_family]">
+						<?php foreach ( $font_modes as $k => $l ) : ?>
+							<option value="<?php echo esc_attr( $k ); ?>" <?php selected( $o['font_family'], $k ); ?>><?php echo esc_html( $l ); ?></option>
+						<?php endforeach; ?>
+					</select>
+					<p class="description">
+						<?php esc_html_e( 'By default the banner inherits the font of the page, so it matches your theme automatically. Pick Elementor to follow its primary global font explicitly, or set your own stack below.', 'digitizer-cookie-consent' ); ?>
+					</p>
+					<?php if ( '' !== $elementor_font ) : ?>
+						<p class="description">
+							<?php
+							printf(
+								/* translators: %s: font family name detected from Elementor */
+								esc_html__( 'Elementor primary font detected: %s', 'digitizer-cookie-consent' ),
+								'<code>' . esc_html( $elementor_font ) . '</code>'
+							);
+							?>
+						</p>
+					<?php else : ?>
+						<p class="description"><?php esc_html_e( 'No Elementor primary font detected on this site - that option will fall back to inheriting.', 'digitizer-cookie-consent' ); ?></p>
+					<?php endif; ?>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_font_family_custom"><?php esc_html_e( 'Custom font stack', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<input type="text" class="regular-text" id="dpt_cb_font_family_custom" name="dpt_cb[font_family_custom]" value="<?php echo esc_attr( $o['font_family_custom'] ); ?>" placeholder="&quot;Rubik&quot;, sans-serif" />
+					<p class="description"><?php esc_html_e( 'Used only when "Custom font stack" is selected. The font itself must already be loaded by the theme - this setting does not load web fonts.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+		</table>
+
+		<h3 class="dpt-section-heading"><span class="dashicons dashicons-admin-appearance"></span> <?php esc_html_e( 'Colors and background', 'digitizer-cookie-consent' ); ?></h3>
+		<table class="form-table dpt-form">
+			<tr>
+				<th><label for="dpt_cb_bg_color"><?php esc_html_e( 'Background color', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="text" class="dpt-color" id="dpt_cb_bg_color" name="dpt_cb[bg_color]" value="<?php echo esc_attr( $o['bg_color'] ); ?>" /></td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_text_color"><?php esc_html_e( 'Base text color', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="text" class="dpt-color" id="dpt_cb_text_color" name="dpt_cb[text_color]" value="<?php echo esc_attr( $o['text_color'] ); ?>" /></td>
+			</tr>
+			<tr>
+				<th><?php esc_html_e( 'Box shadow', 'digitizer-cookie-consent' ); ?></th>
+				<td><?php $this->switch_field( 'box_shadow', $o['box_shadow'] ); ?></td>
+			</tr>
+		</table>
+
+		<h3 class="dpt-section-heading"><span class="dashicons dashicons-image-filter"></span> <?php esc_html_e( 'Page overlay (dim the site behind the banner)', 'digitizer-cookie-consent' ); ?></h3>
+		<table class="form-table dpt-form">
+			<tr>
+				<th><?php esc_html_e( 'Enable overlay', 'digitizer-cookie-consent' ); ?></th>
+				<td>
+					<?php $this->switch_field( 'overlay_enabled', $o['overlay_enabled'] ); ?>
+					<p class="description"><?php esc_html_e( 'Dims the page behind the banner, prompting the visitor to choose.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_overlay_color"><?php esc_html_e( 'Overlay color', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="text" class="dpt-color" id="dpt_cb_overlay_color" name="dpt_cb[overlay_color]" value="<?php echo esc_attr( $o['overlay_color'] ); ?>" /></td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_overlay_opacity"><?php esc_html_e( 'Overlay opacity (0-1)', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="number" step="0.05" min="0" max="1" id="dpt_cb_overlay_opacity" name="dpt_cb[overlay_opacity]" value="<?php echo esc_attr( $o['overlay_opacity'] ); ?>" /></td>
+			</tr>
+		</table>
+
+		<h3 class="dpt-section-heading"><span class="dashicons dashicons-format-image"></span> <?php esc_html_e( 'Background image', 'digitizer-cookie-consent' ); ?></h3>
+		<table class="form-table dpt-form">
+			<tr>
+				<th><?php esc_html_e( 'Background image', 'digitizer-cookie-consent' ); ?></th>
+				<td>
+					<div class="dpt-image-picker">
+						<input type="hidden" name="dpt_cb[bg_image_url]" value="<?php echo esc_attr( $o['bg_image_url'] ); ?>" />
+						<input type="hidden" name="dpt_cb[bg_image_id]"  value="<?php echo esc_attr( $o['bg_image_id'] ); ?>" />
+						<div class="dpt-image-preview">
+							<?php if ( $o['bg_image_url'] ) : ?>
+								<img src="<?php echo esc_url( $o['bg_image_url'] ); ?>" alt="" />
+							<?php endif; ?>
+						</div>
+						<p>
+							<button type="button" class="button dpt-image-select"><?php esc_html_e( 'Choose image', 'digitizer-cookie-consent' ); ?></button>
+							<button type="button" class="button dpt-image-remove" <?php echo ! $o['bg_image_url'] ? 'style="display:none;"' : ''; ?>><?php esc_html_e( 'Remove image', 'digitizer-cookie-consent' ); ?></button>
+						</p>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_bg_image_size"><?php esc_html_e( 'Image size', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<?php $sizes = array( 'cover' => 'Cover', 'contain' => 'Contain', 'auto' => 'Auto', '100% 100%' => 'Stretch' ); ?>
+					<select id="dpt_cb_bg_image_size" name="dpt_cb[bg_image_size]">
+						<?php foreach ( $sizes as $k => $l ) : ?>
+							<option value="<?php echo esc_attr( $k ); ?>" <?php selected( $o['bg_image_size'], $k ); ?>><?php echo esc_html( $l ); ?></option>
+						<?php endforeach; ?>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_bg_image_position"><?php esc_html_e( 'Image position', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<?php
+					$poss = array(
+						'center center' => __( 'Center', 'digitizer-cookie-consent' ),
+						'top center'    => __( 'Top (center)', 'digitizer-cookie-consent' ),
+						'bottom center' => __( 'Bottom (center)', 'digitizer-cookie-consent' ),
+						'top left'      => __( 'Top left', 'digitizer-cookie-consent' ),
+						'top right'     => __( 'Top right', 'digitizer-cookie-consent' ),
+						'bottom left'   => __( 'Bottom left', 'digitizer-cookie-consent' ),
+						'bottom right'  => __( 'Bottom right', 'digitizer-cookie-consent' ),
+						'center left'   => __( 'Left side', 'digitizer-cookie-consent' ),
+						'center right'  => __( 'Right side', 'digitizer-cookie-consent' ),
+					);
+					?>
+					<select id="dpt_cb_bg_image_position" name="dpt_cb[bg_image_position]">
+						<?php foreach ( $poss as $k => $l ) : ?>
+							<option value="<?php echo esc_attr( $k ); ?>" <?php selected( $o['bg_image_position'], $k ); ?>><?php echo esc_html( $l ); ?></option>
+						<?php endforeach; ?>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_bg_image_repeat"><?php esc_html_e( 'Repeat', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<?php
+					$reps = array(
+						'no-repeat' => __( 'No repeat', 'digitizer-cookie-consent' ),
+						'repeat'    => __( 'Repeat', 'digitizer-cookie-consent' ),
+						'repeat-x'  => __( 'Horizontal', 'digitizer-cookie-consent' ),
+						'repeat-y'  => __( 'Vertical', 'digitizer-cookie-consent' ),
+					);
+					?>
+					<select id="dpt_cb_bg_image_repeat" name="dpt_cb[bg_image_repeat]">
+						<?php foreach ( $reps as $k => $l ) : ?>
+							<option value="<?php echo esc_attr( $k ); ?>" <?php selected( $o['bg_image_repeat'], $k ); ?>><?php echo esc_html( $l ); ?></option>
+						<?php endforeach; ?>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_bg_image_overlay_color"><?php esc_html_e( 'Image overlay color', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<input type="text" class="dpt-color" id="dpt_cb_bg_image_overlay_color" name="dpt_cb[bg_image_overlay_color]" value="<?php echo esc_attr( $o['bg_image_overlay_color'] ); ?>" />
+					<p class="description"><?php esc_html_e( 'Darkens a bright image so the text stays readable.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_bg_image_overlay_opacity"><?php esc_html_e( 'Image overlay opacity (0-1)', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="number" step="0.05" min="0" max="1" id="dpt_cb_bg_image_overlay_opacity" name="dpt_cb[bg_image_overlay_opacity]" value="<?php echo esc_attr( $o['bg_image_overlay_opacity'] ); ?>" /></td>
+			</tr>
+		</table>
+
+		<h3 class="dpt-section-heading"><span class="dashicons dashicons-grid-view"></span> <?php esc_html_e( 'Layout and border', 'digitizer-cookie-consent' ); ?></h3>
+		<table class="form-table dpt-form">
+			<tr>
+				<th><label for="dpt_cb_width"><?php esc_html_e( 'Max width on desktop (px)', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<input type="number" min="200" id="dpt_cb_width" name="dpt_cb[width]" value="<?php echo esc_attr( $o['width'] ); ?>" /> px
+					<p class="description"><?php esc_html_e( 'Used by the full-width bars and the centered modal. Corner positions have their own width below.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_width_corner"><?php esc_html_e( 'Corner width on desktop (px)', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<input type="number" min="200" id="dpt_cb_width_corner" name="dpt_cb[width_corner]" value="<?php echo esc_attr( $o['width_corner'] ); ?>" /> px
+					<p class="description"><?php esc_html_e( 'Only for the bottom-left / bottom-right corner positions, which sit next to the content instead of stretching across it. Try 380-450px for a compact card.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_corner_offset_x"><?php esc_html_e( 'Corner distance from the side (px)', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<input type="number" min="0" id="dpt_cb_corner_offset_x" name="dpt_cb[corner_offset_x]" value="<?php echo esc_attr( $o['corner_offset_x'] ); ?>" /> px
+					<p class="description"><?php esc_html_e( 'Corner positions on desktop: from the left edge for bottom-left, from the right edge for bottom-right.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_corner_offset_y"><?php esc_html_e( 'Corner distance from the bottom (px)', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="number" min="0" id="dpt_cb_corner_offset_y" name="dpt_cb[corner_offset_y]" value="<?php echo esc_attr( $o['corner_offset_y'] ); ?>" /> px</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_max_width_pct"><?php esc_html_e( 'Width on desktop (%)', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<input type="number" min="10" max="100" id="dpt_cb_max_width_pct" name="dpt_cb[max_width_pct]" value="<?php echo esc_attr( $o['max_width_pct'] ); ?>" /> %
+					<p class="description"><?php esc_html_e( 'Percentage of the available width, capped by the max width above.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_width_mobile"><?php esc_html_e( 'Max width on mobile (px)', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<input type="number" min="200" id="dpt_cb_width_mobile" name="dpt_cb[width_mobile]" value="<?php echo esc_attr( $o['width_mobile'] ); ?>" /> px
+					<p class="description"><?php esc_html_e( 'Applied below 640px wide, so the banner can be a narrow card on desktop and full-width on phones.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_max_width_pct_mobile"><?php esc_html_e( 'Width on mobile (%)', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="number" min="10" max="100" id="dpt_cb_max_width_pct_mobile" name="dpt_cb[max_width_pct_mobile]" value="<?php echo esc_attr( $o['max_width_pct_mobile'] ); ?>" /> %</td>
+			</tr>
+			<tr>
+				<th><?php esc_html_e( 'Full-width bar on mobile', 'digitizer-cookie-consent' ); ?></th>
+				<td>
+					<?php $this->switch_field( 'mobile_full_width', $o['mobile_full_width'] ); ?>
+					<p class="description"><?php esc_html_e( 'Below 640px wide: flush with the edge of the screen, full width, with no margin and no rounded corners. Overrides the two mobile widths above. Not used by the centered position.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><?php esc_html_e( 'Round the inner edge of the bar', 'digitizer-cookie-consent' ); ?></th>
+				<td>
+					<?php $this->switch_field( 'mobile_full_width_radius', $o['mobile_full_width_radius'] ); ?>
+					<p class="description"><?php esc_html_e( 'With the full-width bar: the corners facing the page keep the corner radius below (the top corners of a bottom bar). The edge against the screen stays square.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_border_radius"><?php esc_html_e( 'Corner radius (px)', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="number" min="0" id="dpt_cb_border_radius" name="dpt_cb[border_radius]" value="<?php echo esc_attr( $o['border_radius'] ); ?>" /> px</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_padding"><?php esc_html_e( 'Inner padding (px)', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="number" min="0" id="dpt_cb_padding" name="dpt_cb[padding]" value="<?php echo esc_attr( $o['padding'] ); ?>" /> px</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_border_width"><?php esc_html_e( 'Border width (px)', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="number" min="0" id="dpt_cb_border_width" name="dpt_cb[border_width]" value="<?php echo esc_attr( $o['border_width'] ); ?>" /> px</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_border_color"><?php esc_html_e( 'Border color', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="text" class="dpt-color" id="dpt_cb_border_color" name="dpt_cb[border_color]" value="<?php echo esc_attr( $o['border_color'] ); ?>" /></td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_border_style"><?php esc_html_e( 'Border style', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<?php
+					$styles = array(
+						'solid'  => __( 'Solid', 'digitizer-cookie-consent' ),
+						'dashed' => __( 'Dashed', 'digitizer-cookie-consent' ),
+						'dotted' => __( 'Dotted', 'digitizer-cookie-consent' ),
+						'double' => __( 'Double', 'digitizer-cookie-consent' ),
+					);
+					?>
+					<select id="dpt_cb_border_style" name="dpt_cb[border_style]">
+						<?php foreach ( $styles as $k => $l ) : ?>
+							<option value="<?php echo esc_attr( $k ); ?>" <?php selected( $o['border_style'], $k ); ?>><?php echo esc_html( $l ); ?></option>
+						<?php endforeach; ?>
+					</select>
+				</td>
+			</tr>
+		</table>
+
+		<h3 class="dpt-section-heading"><span class="dashicons dashicons-no-alt"></span> <?php esc_html_e( 'Close button (X)', 'digitizer-cookie-consent' ); ?></h3>
+		<table class="form-table dpt-form">
+			<tr>
+				<th><?php esc_html_e( 'Show close button', 'digitizer-cookie-consent' ); ?></th>
+				<td>
+					<?php $this->switch_field( 'show_close', $o['show_close'] ); ?>
+					<p class="description"><?php esc_html_e( 'Closing with X counts as rejecting non-essential cookies.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_close_size"><?php esc_html_e( 'X size (px)', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<input type="number" min="12" max="60" id="dpt_cb_close_size" name="dpt_cb[close_size]" value="<?php echo esc_attr( $o['close_size'] ); ?>" /> px
+					<p class="description"><?php esc_html_e( 'With the icon, its width and height.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_close_icon"><?php esc_html_e( 'X shape', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<select id="dpt_cb_close_icon" name="dpt_cb[close_icon]">
+						<option value="text" <?php selected( $o['close_icon'], 'text' ); ?>><?php esc_html_e( 'Character (in the banner font)', 'digitizer-cookie-consent' ); ?></option>
+						<option value="svg" <?php selected( $o['close_icon'], 'svg' ); ?>><?php esc_html_e( 'Icon (bold, the same in every font)', 'digitizer-cookie-consent' ); ?></option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_close_opacity"><?php esc_html_e( 'X opacity (0.1-1)', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<input type="number" step="0.05" min="0.1" max="1" id="dpt_cb_close_opacity" name="dpt_cb[close_opacity]" value="<?php echo esc_attr( $o['close_opacity'] ); ?>" />
+					<p class="description"><?php esc_html_e( '1 = full strength. On hover it is always shown in full.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_close_color"><?php esc_html_e( 'X color', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<input type="text" class="dpt-color" id="dpt_cb_close_color" name="dpt_cb[close_color]" value="<?php echo esc_attr( $o['close_color'] ); ?>" data-default-color="" />
+					<p class="description"><?php esc_html_e( 'Empty = use the base text color.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_close_bg_color"><?php esc_html_e( 'X background color', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<input type="text" class="dpt-color" id="dpt_cb_close_bg_color" name="dpt_cb[close_bg_color]" value="<?php echo esc_attr( $o['close_bg_color'] ); ?>" data-default-color="" />
+					<p class="description"><?php esc_html_e( 'Empty = transparent. With a color, the button becomes a circle.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+		</table>
+		<?php
+	}
+
+	/**
+	 * Font weight choices, shared by the title and the buttons. The values
+	 * match Digitizer_Cookie_Consent_Settings::css_value_allowlists().
+	 *
+	 * @return array
+	 */
+	private function font_weights() {
+		return array(
+			'300' => __( '300 - Light', 'digitizer-cookie-consent' ),
+			'400' => __( '400 - Regular', 'digitizer-cookie-consent' ),
+			'500' => __( '500 - Medium', 'digitizer-cookie-consent' ),
+			'600' => __( '600 - Semi-bold', 'digitizer-cookie-consent' ),
+			'700' => __( '700 - Bold', 'digitizer-cookie-consent' ),
+			'800' => __( '800 - Extra-bold', 'digitizer-cookie-consent' ),
+			'900' => __( '900 - Black', 'digitizer-cookie-consent' ),
+		);
+	}
+
+	private function tab_typography( $o ) {
+		$aligns = array(
+			'start'   => __( 'Start (right in RTL, left in LTR)', 'digitizer-cookie-consent' ),
+			'center'  => __( 'Center', 'digitizer-cookie-consent' ),
+			'end'     => __( 'End (left in RTL, right in LTR)', 'digitizer-cookie-consent' ),
+			'justify' => __( 'Justify', 'digitizer-cookie-consent' ),
+		);
+		$weights = $this->font_weights();
+		?>
+		<h2><span class="dashicons dashicons-editor-textcolor"></span> <?php esc_html_e( 'Typography', 'digitizer-cookie-consent' ); ?></h2>
+		<p class="description dpt-big-desc"><?php esc_html_e( 'Alignment uses logical values, so "Start" is right for Hebrew/Arabic pages and left for English pages - the same setting fits every language.', 'digitizer-cookie-consent' ); ?></p>
+
+		<h3 class="dpt-section-heading"><span class="dashicons dashicons-heading"></span> <?php esc_html_e( 'Title', 'digitizer-cookie-consent' ); ?></h3>
+		<table class="form-table dpt-form">
+			<tr>
+				<th><?php esc_html_e( 'Show title', 'digitizer-cookie-consent' ); ?></th>
+				<td>
+					<?php $this->switch_field( 'title_show', $o['title_show'] ); ?>
+					<p class="description"><?php esc_html_e( 'Off hides the title from sight. Screen readers still read it, because it is the name of the banner\'s dialog.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_title_color"><?php esc_html_e( 'Title color', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<input type="text" class="dpt-color" id="dpt_cb_title_color" name="dpt_cb[title_color]" value="<?php echo esc_attr( $o['title_color'] ); ?>" data-default-color="" />
+					<p class="description"><?php esc_html_e( 'Empty = use the base text color.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_title_font_size"><?php esc_html_e( 'Font size', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="number" min="10" max="80" id="dpt_cb_title_font_size" name="dpt_cb[title_font_size]" value="<?php echo esc_attr( $o['title_font_size'] ); ?>" /> px</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_title_align"><?php esc_html_e( 'Alignment', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<select id="dpt_cb_title_align" name="dpt_cb[title_align]">
+						<?php foreach ( $aligns as $k => $l ) : ?>
+							<option value="<?php echo esc_attr( $k ); ?>" <?php selected( $o['title_align'], $k ); ?>><?php echo esc_html( $l ); ?></option>
+						<?php endforeach; ?>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_title_weight"><?php esc_html_e( 'Font weight', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<select id="dpt_cb_title_weight" name="dpt_cb[title_weight]">
+						<?php foreach ( $weights as $k => $l ) : ?>
+							<option value="<?php echo esc_attr( $k ); ?>" <?php selected( $o['title_weight'], $k ); ?>><?php echo esc_html( $l ); ?></option>
+						<?php endforeach; ?>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_title_margin_bottom"><?php esc_html_e( 'Space below (px)', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="number" min="0" id="dpt_cb_title_margin_bottom" name="dpt_cb[title_margin_bottom]" value="<?php echo esc_attr( $o['title_margin_bottom'] ); ?>" /> px</td>
+			</tr>
+			<tr>
+				<th><?php esc_html_e( 'Text shadow', 'digitizer-cookie-consent' ); ?></th>
+				<td><?php $this->switch_field( 'title_shadow_enabled', $o['title_shadow_enabled'] ); ?></td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_title_shadow_color"><?php esc_html_e( 'Shadow color', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="text" class="dpt-color" id="dpt_cb_title_shadow_color" name="dpt_cb[title_shadow_color]" value="<?php echo esc_attr( $o['title_shadow_color'] ); ?>" /></td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_title_shadow_blur"><?php esc_html_e( 'Blur (px)', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="number" min="0" max="40" id="dpt_cb_title_shadow_blur" name="dpt_cb[title_shadow_blur]" value="<?php echo esc_attr( $o['title_shadow_blur'] ); ?>" /> px</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_title_shadow_y"><?php esc_html_e( 'Vertical offset (px)', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="number" min="-20" max="20" id="dpt_cb_title_shadow_y" name="dpt_cb[title_shadow_y]" value="<?php echo esc_attr( $o['title_shadow_y'] ); ?>" /> px</td>
+			</tr>
+		</table>
+
+		<h3 class="dpt-section-heading"><span class="dashicons dashicons-text"></span> <?php esc_html_e( 'Content', 'digitizer-cookie-consent' ); ?></h3>
+		<table class="form-table dpt-form">
+			<tr>
+				<th><label for="dpt_cb_content_color"><?php esc_html_e( 'Text color', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<input type="text" class="dpt-color" id="dpt_cb_content_color" name="dpt_cb[content_color]" value="<?php echo esc_attr( $o['content_color'] ); ?>" data-default-color="" />
+					<p class="description"><?php esc_html_e( 'Empty = use the base text color.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_content_font_size"><?php esc_html_e( 'Font size', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="number" min="10" max="40" id="dpt_cb_content_font_size" name="dpt_cb[content_font_size]" value="<?php echo esc_attr( $o['content_font_size'] ); ?>" /> px</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_content_align"><?php esc_html_e( 'Alignment', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<select id="dpt_cb_content_align" name="dpt_cb[content_align]">
+						<?php foreach ( $aligns as $k => $l ) : ?>
+							<option value="<?php echo esc_attr( $k ); ?>" <?php selected( $o['content_align'], $k ); ?>><?php echo esc_html( $l ); ?></option>
+						<?php endforeach; ?>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<th><?php esc_html_e( 'Text shadow', 'digitizer-cookie-consent' ); ?></th>
+				<td><?php $this->switch_field( 'content_shadow_enabled', $o['content_shadow_enabled'] ); ?></td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_content_shadow_color"><?php esc_html_e( 'Shadow color', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="text" class="dpt-color" id="dpt_cb_content_shadow_color" name="dpt_cb[content_shadow_color]" value="<?php echo esc_attr( $o['content_shadow_color'] ); ?>" /></td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_content_shadow_blur"><?php esc_html_e( 'Blur (px)', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="number" min="0" max="40" id="dpt_cb_content_shadow_blur" name="dpt_cb[content_shadow_blur]" value="<?php echo esc_attr( $o['content_shadow_blur'] ); ?>" /> px</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_content_shadow_y"><?php esc_html_e( 'Vertical offset (px)', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="number" min="-20" max="20" id="dpt_cb_content_shadow_y" name="dpt_cb[content_shadow_y]" value="<?php echo esc_attr( $o['content_shadow_y'] ); ?>" /> px</td>
+			</tr>
+		</table>
+		<?php
+	}
+
+	private function tab_buttons( $o ) {
+		?>
+		<h2><span class="dashicons dashicons-button"></span> <?php esc_html_e( 'Button Design', 'digitizer-cookie-consent' ); ?></h2>
+
+		<h3 class="dpt-section-heading"><span class="dashicons dashicons-editor-textcolor"></span> <?php esc_html_e( 'All buttons', 'digitizer-cookie-consent' ); ?></h3>
+		<table class="form-table dpt-form">
+			<tr>
+				<th><label for="dpt_cb_btn_height"><?php esc_html_e( 'Height (px)', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<input type="number" min="0" id="dpt_cb_btn_height" name="dpt_cb[btn_height]" value="<?php echo esc_attr( $o['btn_height'] ); ?>" /> px
+					<p class="description"><?php esc_html_e( '0 = as tall as the text and padding make it.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_btn_font_size"><?php esc_html_e( 'Font size', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="number" min="8" max="40" id="dpt_cb_btn_font_size" name="dpt_cb[btn_font_size]" value="<?php echo esc_attr( $o['btn_font_size'] ); ?>" /> px</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_btn_font_weight"><?php esc_html_e( 'Font weight', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<select id="dpt_cb_btn_font_weight" name="dpt_cb[btn_font_weight]">
+						<?php foreach ( $this->font_weights() as $k => $l ) : ?>
+							<option value="<?php echo esc_attr( $k ); ?>" <?php selected( $o['btn_font_weight'], $k ); ?>><?php echo esc_html( $l ); ?></option>
+						<?php endforeach; ?>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<th><?php esc_html_e( 'Fill the row', 'digitizer-cookie-consent' ); ?></th>
+				<td>
+					<?php $this->switch_field( 'btn_stretch', $o['btn_stretch'] ); ?>
+					<p class="description"><?php esc_html_e( 'On desktop the buttons share the width of the row equally. Off sizes each one to its text. On mobile they are always full width, one under another.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+		</table>
+
+		<h3 class="dpt-section-heading"><span class="dashicons dashicons-yes"></span> <?php esc_html_e( '"Accept all" button', 'digitizer-cookie-consent' ); ?></h3>
+		<?php $this->button_style_fields( 'accept', $o, false ); ?>
+
+		<h3 class="dpt-section-heading"><span class="dashicons dashicons-no-alt"></span> <?php esc_html_e( '"Reject all" button', 'digitizer-cookie-consent' ); ?></h3>
+		<table class="form-table dpt-form">
+			<tr>
+				<th><?php esc_html_e( 'Show button', 'digitizer-cookie-consent' ); ?></th>
+				<td><?php $this->switch_field( 'btn_reject_show', $o['btn_reject_show'] ); ?></td>
+			</tr>
+		</table>
+		<?php $this->button_style_fields( 'reject', $o, false ); ?>
+
+		<h3 class="dpt-section-heading"><span class="dashicons dashicons-admin-generic"></span> <?php esc_html_e( '"Settings" button', 'digitizer-cookie-consent' ); ?></h3>
+		<table class="form-table dpt-form">
+			<tr>
+				<th><?php esc_html_e( 'Show button', 'digitizer-cookie-consent' ); ?></th>
+				<td><?php $this->switch_field( 'btn_settings_show', $o['btn_settings_show'] ); ?></td>
+			</tr>
+		</table>
+		<?php $this->button_style_fields( 'settings', $o, true ); ?>
+
+		<h3 class="dpt-section-heading"><span class="dashicons dashicons-saved"></span> <?php esc_html_e( '"Save preferences" button', 'digitizer-cookie-consent' ); ?></h3>
+		<?php $this->button_style_fields( 'save', $o, false ); ?>
+		<?php
+	}
+
+	private function button_style_fields( $prefix, $o, $with_border ) {
+		$bg     = $o[ 'btn_' . $prefix . '_bg' ];
+		$color  = $o[ 'btn_' . $prefix . '_color' ];
+		$radius = $o[ 'btn_' . $prefix . '_radius' ];
+		?>
+		<table class="form-table dpt-form">
+			<tr>
+				<th><label><?php esc_html_e( 'Background color', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="text" class="dpt-color" name="dpt_cb[btn_<?php echo esc_attr( $prefix ); ?>_bg]" value="<?php echo esc_attr( $bg ); ?>" /></td>
+			</tr>
+			<tr>
+				<th><label><?php esc_html_e( 'Text color', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="text" class="dpt-color" name="dpt_cb[btn_<?php echo esc_attr( $prefix ); ?>_color]" value="<?php echo esc_attr( $color ); ?>" /></td>
+			</tr>
+			<tr>
+				<th><label><?php esc_html_e( 'Corner radius (px)', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="number" min="0" name="dpt_cb[btn_<?php echo esc_attr( $prefix ); ?>_radius]" value="<?php echo esc_attr( $radius ); ?>" /> px</td>
+			</tr>
+			<?php if ( in_array( $prefix, array( 'accept', 'reject' ), true ) ) : ?>
+			<tr>
+				<th><label><?php esc_html_e( 'Hover background color', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="text" class="dpt-color" name="dpt_cb[btn_<?php echo esc_attr( $prefix ); ?>_hover_bg]" value="<?php echo esc_attr( $o[ 'btn_' . $prefix . '_hover_bg' ] ); ?>" /></td>
+			</tr>
+			<?php endif; ?>
+			<?php if ( $with_border ) : ?>
+			<tr>
+				<th><?php esc_html_e( 'Border', 'digitizer-cookie-consent' ); ?></th>
+				<td>
+					<?php $this->switch_field( 'btn_' . $prefix . '_border', isset( $o[ 'btn_' . $prefix . '_border' ] ) ? $o[ 'btn_' . $prefix . '_border' ] : '0' ); ?>
+					<p class="description"><?php esc_html_e( 'Adds a thin border in the text color.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label><?php esc_html_e( 'Border color', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<input type="text" class="dpt-color" name="dpt_cb[btn_<?php echo esc_attr( $prefix ); ?>_border_color]" value="<?php echo esc_attr( $o[ 'btn_' . $prefix . '_border_color' ] ); ?>" data-default-color="" />
+					<p class="description"><?php esc_html_e( 'Empty = the button\'s text color.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<?php endif; ?>
+		</table>
+		<?php
+	}
+
+	private function tab_categories( $o ) {
+		?>
+		<h2><span class="dashicons dashicons-category"></span> <?php esc_html_e( 'Cookie Categories', 'digitizer-cookie-consent' ); ?></h2>
+		<p class="description dpt-big-desc"><?php esc_html_e( 'Each category shows a separate toggle on the advanced-preferences screen. Scripts from the "Scripts" tab load only after the visitor consents to the matching category. Category names and descriptions are edited per language on the "Texts" tab.', 'digitizer-cookie-consent' ); ?></p>
+
+		<table class="form-table dpt-form">
+			<tr>
+				<th><span class="dashicons dashicons-lock"></span> <?php esc_html_e( 'Essential cookies', 'digitizer-cookie-consent' ); ?></th>
+				<td><span class="description"><?php esc_html_e( 'Always active - cannot be disabled.', 'digitizer-cookie-consent' ); ?></span></td>
+			</tr>
+			<tr>
+				<th><span class="dashicons dashicons-admin-settings"></span> <?php esc_html_e( 'Functional cookies', 'digitizer-cookie-consent' ); ?></th>
+				<td><?php $this->switch_field( 'cat_functional_enabled', $o['cat_functional_enabled'] ); ?></td>
+			</tr>
+			<tr>
+				<th><span class="dashicons dashicons-chart-bar"></span> <?php esc_html_e( 'Analytics cookies', 'digitizer-cookie-consent' ); ?></th>
+				<td><?php $this->switch_field( 'cat_analytics_enabled', $o['cat_analytics_enabled'] ); ?></td>
+			</tr>
+			<tr>
+				<th><span class="dashicons dashicons-megaphone"></span> <?php esc_html_e( 'Marketing cookies', 'digitizer-cookie-consent' ); ?></th>
+				<td><?php $this->switch_field( 'cat_marketing_enabled', $o['cat_marketing_enabled'] ); ?></td>
+			</tr>
+		</table>
+
+		<h3 class="dpt-section-heading"><span class="dashicons dashicons-trash"></span> <?php esc_html_e( 'Cookies to delete when a category is denied', 'digitizer-cookie-consent' ); ?></h3>
+		<p class="description"><?php esc_html_e( 'When a visitor refuses or withdraws a category, these cookies, and the localStorage and sessionStorage keys with the same names, are deleted from the browser, and again on every page while the category stays denied. One name per line or separated by commas; * matches anything, for example _ga_*.', 'digitizer-cookie-consent' ); ?></p>
+		<p class="description"><?php esc_html_e( 'Only this site\'s own cookies that scripts can read can be deleted: cookies set by other domains, such as .linkedin.com or .doubleclick.net, and cookies marked HttpOnly are out of a page\'s reach. Analytics and advertising tags do not use HttpOnly. WordPress\'s login, settings and comment cookies, WooCommerce\'s cart, session and store-notice data, and the banner\'s own are never deleted. WooCommerce\'s order attribution cookies (sbjs_*) are tracking, and can be listed under marketing.', 'digitizer-cookie-consent' ); ?></p>
+		<table class="form-table dpt-form">
+			<?php
+			$cleanup_rows = array(
+				'functional' => array( __( 'Functional cookies', 'digitizer-cookie-consent' ), '' ),
+				'analytics'  => array( __( 'Analytics cookies', 'digitizer-cookie-consent' ), '_ga, _ga_*, _gid, ph_*_posthog' ),
+				'marketing'  => array( __( 'Marketing cookies', 'digitizer-cookie-consent' ), '_gcl_*, _fbp, li_*' ),
+			);
+			foreach ( $cleanup_rows as $cat => $row ) :
+				?>
+				<tr>
+					<th><label for="dpt_cb_cleanup_<?php echo esc_attr( $cat ); ?>"><?php echo esc_html( $row[0] ); ?></label></th>
+					<td><textarea id="dpt_cb_cleanup_<?php echo esc_attr( $cat ); ?>" name="dpt_cb[cleanup_<?php echo esc_attr( $cat ); ?>]" rows="3" class="large-text code" dir="ltr" placeholder="<?php echo esc_attr( $row[1] ); ?>"><?php echo esc_textarea( $o[ 'cleanup_' . $cat ] ); ?></textarea></td>
+				</tr>
+			<?php endforeach; ?>
+		</table>
+		<?php
+	}
+
+	private function tab_scripts( $o ) {
+		?>
+		<h2><span class="dashicons dashicons-editor-code"></span> <?php esc_html_e( 'Scripts loaded after consent', 'digitizer-cookie-consent' ); ?></h2>
+		<div class="dpt-info-box">
+			<p><strong><?php esc_html_e( 'How does it work?', 'digitizer-cookie-consent' ); ?></strong></p>
+			<p><?php esc_html_e( 'Paste the full HTML snippets here (Google Analytics, Facebook Pixel, GTM...). They are injected into the site <head> only after the visitor consents to the matching category.', 'digitizer-cookie-consent' ); ?></p>
+			<p><?php esc_html_e( 'Paste the complete code including the <script> tags.', 'digitizer-cookie-consent' ); ?></p>
+		</div>
+
+		<h3 class="dpt-section-heading"><span class="dashicons dashicons-admin-settings"></span> <?php esc_html_e( 'Functional scripts', 'digitizer-cookie-consent' ); ?></h3>
+		<table class="form-table dpt-form">
+			<tr>
+				<td>
+					<textarea name="dpt_cb[scripts_functional]" rows="6" class="large-text code" dir="ltr" placeholder="<script>/* Example */</script>"><?php echo esc_textarea( $o['scripts_functional'] ); ?></textarea>
+				</td>
+			</tr>
+		</table>
+
+		<h3 class="dpt-section-heading"><span class="dashicons dashicons-chart-bar"></span> <?php esc_html_e( 'Analytics scripts', 'digitizer-cookie-consent' ); ?></h3>
+		<table class="form-table dpt-form">
+			<tr>
+				<td>
+					<textarea name="dpt_cb[scripts_analytics]" rows="8" class="large-text code" dir="ltr" placeholder="<!-- Google Analytics / GTM -->"><?php echo esc_textarea( $o['scripts_analytics'] ); ?></textarea>
+					<p class="description"><?php esc_html_e( 'For example: Google Analytics 4, Google Tag Manager, Hotjar, Clarity.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+		</table>
+
+		<h3 class="dpt-section-heading"><span class="dashicons dashicons-megaphone"></span> <?php esc_html_e( 'Marketing scripts', 'digitizer-cookie-consent' ); ?></h3>
+		<table class="form-table dpt-form">
+			<tr>
+				<td>
+					<textarea name="dpt_cb[scripts_marketing]" rows="8" class="large-text code" dir="ltr" placeholder="<!-- Facebook Pixel / Google Ads -->"><?php echo esc_textarea( $o['scripts_marketing'] ); ?></textarea>
+					<p class="description"><?php esc_html_e( 'For example: Facebook Pixel, Google Ads, TikTok Pixel, LinkedIn Insight.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+		</table>
+		<?php
+	}
+
+	private function tab_floating( $o ) {
+		?>
+		<h2><span class="dashicons dashicons-sticky"></span> <?php esc_html_e( 'Floating "Manage Cookies" Button', 'digitizer-cookie-consent' ); ?></h2>
+		<p class="description dpt-big-desc"><?php esc_html_e( 'A small button in the corner of the site that lets visitors reopen the banner and change their preferences at any time. Its text and accessibility label are edited per language on the "Texts" tab.', 'digitizer-cookie-consent' ); ?></p>
+
+		<h3 class="dpt-section-heading"><span class="dashicons dashicons-admin-generic"></span> <?php esc_html_e( 'Basics', 'digitizer-cookie-consent' ); ?></h3>
+		<table class="form-table dpt-form">
+			<tr>
+				<th><?php esc_html_e( 'Enable button', 'digitizer-cookie-consent' ); ?></th>
+				<td><?php $this->switch_field( 'float_button_enabled', $o['float_button_enabled'] ); ?></td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_float_position"><?php esc_html_e( 'Anchor corner', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<?php
+					$fp = array(
+						'bottom-right' => __( 'Bottom-right corner', 'digitizer-cookie-consent' ),
+						'bottom-left'  => __( 'Bottom-left corner', 'digitizer-cookie-consent' ),
+						'top-right'    => __( 'Top-right corner', 'digitizer-cookie-consent' ),
+						'top-left'     => __( 'Top-left corner', 'digitizer-cookie-consent' ),
+					);
+					?>
+					<select id="dpt_cb_float_position" name="dpt_cb[float_button_position]">
+						<?php foreach ( $fp as $k => $l ) : ?>
+							<option value="<?php echo esc_attr( $k ); ?>" <?php selected( $o['float_button_position'], $k ); ?>><?php echo esc_html( $l ); ?></option>
+						<?php endforeach; ?>
+					</select>
+					<p class="description"><?php esc_html_e( 'The final position is the corner plus the offsets below.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_float_bg"><?php esc_html_e( 'Background color', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="text" class="dpt-color" id="dpt_cb_float_bg" name="dpt_cb[float_button_bg]" value="<?php echo esc_attr( $o['float_button_bg'] ); ?>" /></td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_float_color"><?php esc_html_e( 'Text color', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="text" class="dpt-color" id="dpt_cb_float_color" name="dpt_cb[float_button_color]" value="<?php echo esc_attr( $o['float_button_color'] ); ?>" /></td>
+			</tr>
+		</table>
+
+		<h3 class="dpt-section-heading"><span class="dashicons dashicons-desktop"></span> <?php esc_html_e( 'Desktop position', 'digitizer-cookie-consent' ); ?></h3>
+		<p class="description dpt-big-desc"><?php esc_html_e( 'Offsets are measured from the chosen corner. For example, corner "bottom-right" with vertical offset 100 places the button 100px above the bottom - handy for avoiding WhatsApp/chat buttons.', 'digitizer-cookie-consent' ); ?></p>
+		<table class="form-table dpt-form">
+			<tr>
+				<th><label for="dpt_cb_float_offset_x"><?php esc_html_e( 'Horizontal offset', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="number" min="0" max="500" id="dpt_cb_float_offset_x" name="dpt_cb[float_offset_x]" value="<?php echo esc_attr( $o['float_offset_x'] ); ?>" /> px</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_float_offset_y"><?php esc_html_e( 'Vertical offset', 'digitizer-cookie-consent' ); ?></label></th>
+				<td>
+					<input type="number" min="0" max="500" id="dpt_cb_float_offset_y" name="dpt_cb[float_offset_y]" value="<?php echo esc_attr( $o['float_offset_y'] ); ?>" /> px
+					<p class="description"><?php esc_html_e( 'Tip: WhatsApp buttons usually sit 20-80px from the bottom. Use 90-100 to avoid collisions.', 'digitizer-cookie-consent' ); ?></p>
+				</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_float_size"><?php esc_html_e( 'Button size', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="number" min="30" max="100" id="dpt_cb_float_size" name="dpt_cb[float_button_size]" value="<?php echo esc_attr( $o['float_button_size'] ); ?>" /> px</td>
+			</tr>
+		</table>
+
+		<h3 class="dpt-section-heading"><span class="dashicons dashicons-smartphone"></span> <?php esc_html_e( 'Mobile position', 'digitizer-cookie-consent' ); ?></h3>
+		<p class="description dpt-big-desc"><?php esc_html_e( 'Separate values for screens up to 640px wide.', 'digitizer-cookie-consent' ); ?></p>
+		<table class="form-table dpt-form">
+			<tr>
+				<th><label for="dpt_cb_float_offset_x_mobile"><?php esc_html_e( 'Horizontal offset', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="number" min="0" max="500" id="dpt_cb_float_offset_x_mobile" name="dpt_cb[float_offset_x_mobile]" value="<?php echo esc_attr( $o['float_offset_x_mobile'] ); ?>" /> px</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_float_offset_y_mobile"><?php esc_html_e( 'Vertical offset', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="number" min="0" max="500" id="dpt_cb_float_offset_y_mobile" name="dpt_cb[float_offset_y_mobile]" value="<?php echo esc_attr( $o['float_offset_y_mobile'] ); ?>" /> px</td>
+			</tr>
+			<tr>
+				<th><label for="dpt_cb_float_size_mobile"><?php esc_html_e( 'Button size', 'digitizer-cookie-consent' ); ?></label></th>
+				<td><input type="number" min="30" max="100" id="dpt_cb_float_size_mobile" name="dpt_cb[float_button_size_mobile]" value="<?php echo esc_attr( $o['float_button_size_mobile'] ); ?>" /> px</td>
+			</tr>
+		</table>
+		<?php
+	}
+
+	/* ============================================================
+	 *  Sidebar preview
+	 * ============================================================ */
+
+	/**
+	 * Static preview snapshot of the saved values, in the language
+	 * currently being edited (or the default language).
+	 */
+	private function render_preview( $o, $lang ) {
+		$texts = Digitizer_Cookie_Consent_Settings::get_texts( $lang );
+		$rtl   = in_array( strtolower( substr( $lang, 0, (int) strcspn( $lang, '_' ) ) ), array( 'he', 'ar', 'fa', 'ur', 'yi' ), true );
+		$dir   = $rtl ? 'rtl' : 'ltr';
+
+		$bg      = $o['bg_color'];
+		$text    = $o['text_color'];
+		$radius  = (int) $o['border_radius'];
+		$padding = (int) $o['padding'];
+
+		$box_style_parts = array(
+			'background-color:' . esc_attr( $bg ),
+			'border-radius:' . $radius . 'px',
+			'padding:' . $padding . 'px',
+			'color:' . esc_attr( $text ),
+		);
+		if ( $o['bg_image_url'] ) {
+			$img_layers = '';
+			$ov_o = (float) $o['bg_image_overlay_opacity'];
+			if ( $ov_o > 0 ) {
+				$rgba = $this->hex_to_rgba( $o['bg_image_overlay_color'], $ov_o );
+				$img_layers = "linear-gradient({$rgba},{$rgba}),";
+			}
+			$box_style_parts[] = sprintf( "background-image:%s url('%s')", $img_layers, esc_url( $o['bg_image_url'] ) );
+			$box_style_parts[] = 'background-size:' . esc_attr( $o['bg_image_size'] );
+			$box_style_parts[] = 'background-position:' . esc_attr( $o['bg_image_position'] );
+			$box_style_parts[] = 'background-repeat:' . esc_attr( $o['bg_image_repeat'] );
+		}
+		if ( (int) $o['border_width'] > 0 ) {
+			$box_style_parts[] = 'border:' . (int) $o['border_width'] . 'px ' . esc_attr( $o['border_style'] ) . ' ' . esc_attr( $o['border_color'] );
+		}
+		$box_style = implode( ';', $box_style_parts );
+
+		$title_color = $o['title_color'] ? $o['title_color'] : $text;
+		$title_style = sprintf(
+			'color:%s;font-size:%dpx;text-align:%s;font-weight:%s;margin:0 0 %dpx;',
+			esc_attr( $title_color ), (int) $o['title_font_size'], esc_attr( $o['title_align'] ),
+			esc_attr( $o['title_weight'] ), (int) $o['title_margin_bottom']
+		);
+		if ( '1' === $o['title_shadow_enabled'] ) {
+			$title_style .= sprintf( 'text-shadow:0 %dpx %dpx %s;', (int) $o['title_shadow_y'], (int) $o['title_shadow_blur'], esc_attr( $o['title_shadow_color'] ) );
+		}
+
+		$content_color = $o['content_color'] ? $o['content_color'] : $text;
+		$content_style = sprintf(
+			'color:%s;font-size:%dpx;text-align:%s;line-height:1.5;',
+			esc_attr( $content_color ), (int) $o['content_font_size'], esc_attr( $o['content_align'] )
+		);
+		if ( '1' === $o['content_shadow_enabled'] ) {
+			$content_style .= sprintf( 'text-shadow:0 %dpx %dpx %s;', (int) $o['content_shadow_y'], (int) $o['content_shadow_blur'], esc_attr( $o['content_shadow_color'] ) );
+		}
+
+		$btn_accept_style = sprintf( 'background:%s;color:%s;border-radius:%dpx;',
+			esc_attr( $o['btn_accept_bg'] ), esc_attr( $o['btn_accept_color'] ), (int) $o['btn_accept_radius'] );
+		$btn_reject_style = sprintf( 'background:%s;color:%s;border-radius:%dpx;',
+			esc_attr( $o['btn_reject_bg'] ), esc_attr( $o['btn_reject_color'] ), (int) $o['btn_reject_radius'] );
+		$settings_border  = isset( $o['btn_settings_border'] ) && '1' === $o['btn_settings_border'] ? 'border:1px solid ' . ( $o['btn_settings_border_color'] ? esc_attr( $o['btn_settings_border_color'] ) : 'currentColor' ) . ';' : '';
+		$btn_size_style   = sprintf( 'font-size:%dpx;font-weight:%s;', max( 8, (int) $o['btn_font_size'] ), esc_attr( $o['btn_font_weight'] ) )
+			. ( (int) $o['btn_height'] > 0 ? 'display:inline-flex;align-items:center;min-height:' . (int) $o['btn_height'] . 'px;' : '' );
+		$btn_settings_style = sprintf( 'background:%s;color:%s;border-radius:%dpx;%s',
+			esc_attr( $o['btn_settings_bg'] ), esc_attr( $o['btn_settings_color'] ), (int) $o['btn_settings_radius'], $settings_border );
+		if ( '1' === $o['btn_stretch'] ) {
+			$btn_size_style .= 'flex:1 1 0;text-align:center;';
+		}
+		$btn_accept_style   .= $btn_size_style;
+		$btn_reject_style   .= $btn_size_style;
+		$btn_settings_style .= $btn_size_style;
+		?>
+		<div class="dpt-preview-wrap">
+			<h3><span class="dashicons dashicons-visibility"></span> <?php esc_html_e( 'Preview', 'digitizer-cookie-consent' ); ?> <span class="dpt-preview-lang">(<?php echo esc_html( $this->lang_label( $lang ) ); ?>)</span></h3>
+			<p class="description"><?php esc_html_e( 'Updates after saving.', 'digitizer-cookie-consent' ); ?></p>
+			<div class="dpt-preview-box" dir="<?php echo esc_attr( $dir ); ?>" style="<?php echo esc_attr( $box_style ); ?>">
+				<?php if ( '1' === $o['show_close'] ) : ?>
+					<span class="dpt-preview-close" style="color:<?php echo esc_attr( $o['close_color'] ?: $text ); ?>;font-size:<?php echo (int) $o['close_size']; ?>px;<?php echo $o['close_bg_color'] ? 'background:' . esc_attr( $o['close_bg_color'] ) . ';border-radius:50%;' : ''; ?>opacity:<?php echo esc_attr( Digitizer_Cookie_Consent_Frontend::close_opacity( $o['close_opacity'] ) ); ?>;"><?php echo Digitizer_Cookie_Consent_Frontend::close_glyph( $o['close_icon'] ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Fixed markup from close_glyph(). ?></span>
+				<?php endif; ?>
+				<?php if ( '1' === $o['title_show'] ) : ?>
+					<h4 style="<?php echo esc_attr( $title_style ); ?>"><?php echo esc_html( $texts['title'] ); ?></h4>
+				<?php endif; ?>
+				<?php
+				// The room the site's banner keeps clear of the close button
+				// when no title is shown (see Digitizer_Cookie_Consent_Frontend::render_inline_css()).
+				$close_clear = ( '1' === $o['show_close'] && ( '1' !== $o['title_show'] || '' === $texts['title'] ) )
+					? max( 0, 8 + max( 20, (int) $o['close_size'] + 12 ) - max( 0, (int) $o['padding'] ) )
+					: 0;
+				?>
+				<div style="<?php echo esc_attr( $content_style ); ?>"><?php if ( $close_clear > 0 ) : ?><span aria-hidden="true" style="<?php echo esc_attr( sprintf( 'float:%s;width:%dpx;height:%dpx;', 'rtl' === $dir ? 'left' : 'right', $close_clear + 4, $close_clear ) ); ?>"></span><?php endif; ?><?php echo wp_kses_post( wpautop( $texts['message'] ) ); ?></div>
+				<div class="dpt-preview-buttons">
+					<span class="dpt-preview-btn" style="<?php echo esc_attr( $btn_accept_style ); ?>"><?php echo esc_html( $texts['btn_accept_text'] ); ?></span>
+					<?php if ( '1' === $o['btn_reject_show'] ) : ?>
+						<span class="dpt-preview-btn" style="<?php echo esc_attr( $btn_reject_style ); ?>"><?php echo esc_html( $texts['btn_reject_text'] ); ?></span>
+					<?php endif; ?>
+					<?php if ( '1' === $o['btn_settings_show'] ) : ?>
+						<span class="dpt-preview-btn" style="<?php echo esc_attr( $btn_settings_style ); ?>"><?php echo esc_html( $texts['btn_settings_text'] ); ?></span>
+					<?php endif; ?>
+				</div>
+			</div>
+			<p style="margin-top:12px;">
+				<a href="<?php echo esc_url( home_url( '/?digitizer_cc_preview=1' ) ); ?>" target="_blank" class="button button-primary" style="width:100%;text-align:center;">
+					<span class="dashicons dashicons-search"></span> <?php esc_html_e( 'View banner on the site', 'digitizer-cookie-consent' ); ?>
+				</a>
+			</p>
+		</div>
+		<?php
+	}
+
+	private function hex_to_rgba( $hex, $opacity ) {
+		$hex = ltrim( (string) $hex, '#' );
+		if ( 3 === strlen( $hex ) ) {
+			$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+		}
+		if ( 6 !== strlen( $hex ) ) { $hex = '000000'; }
+		$r = hexdec( substr( $hex, 0, 2 ) );
+		$g = hexdec( substr( $hex, 2, 2 ) );
+		$b = hexdec( substr( $hex, 4, 2 ) );
+		$op = max( 0, min( 1, (float) $opacity ) );
+		return "rgba({$r},{$g},{$b},{$op})";
+	}
+}
