@@ -1202,7 +1202,7 @@ class Digitizer_Cookie_Consent_Frontend {
 		     dir="<?php echo esc_attr( $dir ); ?>"
 		     lang="<?php echo esc_attr( str_replace( '_', '-', $lang ) ); ?>"
 		     <?php if ( $preview_mode ) : ?>data-force-open="1"<?php endif; ?>
-		     role="dialog" aria-labelledby="dpt-cb-title" aria-modal="true">
+		     role="dialog" aria-labelledby="dpt-cb-title">
 			<div class="dpt-cb-box">
 				<?php if ( '1' === $o['show_close'] ) : ?>
 					<?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Fixed markup from close_glyph(). ?>

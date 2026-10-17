@@ -766,6 +766,15 @@ class Digitizer_Cookie_Consent_Settings {
 				$clean[ $key ] = '1' === $value ? '1' : '0';
 			} elseif ( in_array( $key, array( 'cleanup_functional', 'cleanup_analytics', 'cleanup_marketing' ), true ) ) {
 				$clean[ $key ] = implode( "\n", self::cookie_patterns( $value ) );
+			} elseif ( 'consent_version' === $key || 'consent_days' === $key ) {
+				// The precheck, frontend.js and the WP Consent API answer must
+				// read the same number: a blank or nonsense entry is the default,
+				// and days stop at the form's 730.
+				$n = (int) ( is_numeric( $value ) ? $value : 0 );
+				if ( 'consent_days' === $key ) {
+					$n = min( $n, 730 );
+				}
+				$clean[ $key ] = $n >= 1 ? (string) $n : $defaults[ $key ];
 			} else {
 				$clean[ $key ] = sanitize_text_field( $value );
 			}

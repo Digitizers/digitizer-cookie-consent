@@ -80,6 +80,27 @@ $GLOBALS['dpt_stub_options'] = array();
 Digitizer_Cookie_Consent_Core::activate( false );
 dpt_test_eq( $GLOBALS['dpt_test_purges'], 1, 'a fresh activation purges the page cache once' );
 
+/* So does the seeding boot() does for a site the activation hook never reached. */
+$GLOBALS['dpt_test_purges'] = 0;
+$GLOBALS['dpt_stub_options'] = array();
+Digitizer_Cookie_Consent_Core::boot();
+dpt_test_eq( $GLOBALS['dpt_test_purges'], 1, 'boot() seeding a site without the option purges the page cache once' );
+$GLOBALS['dpt_test_purges'] = 0;
+Digitizer_Cookie_Consent_Core::boot();
+dpt_test_eq( $GLOBALS['dpt_test_purges'], 0, 'and an already seeded site is not purged on every load' );
+
+/* Blank or nonsense consent timing falls back to the defaults the precheck and frontend.js agree on. */
+$c = Digitizer_Cookie_Consent_Settings::sanitize( array( 'consent_version' => '', 'consent_days' => '' ), Digitizer_Cookie_Consent_Settings::defaults() );
+dpt_test_eq( array( $c['consent_version'], $c['consent_days'] ), array( '1', '180' ), 'blank version and days become 1 and 180' );
+$c = Digitizer_Cookie_Consent_Settings::sanitize( array( 'consent_version' => '0', 'consent_days' => 'abc' ), Digitizer_Cookie_Consent_Settings::defaults() );
+dpt_test_eq( array( $c['consent_version'], $c['consent_days'] ), array( '1', '180' ), 'zero and non-numbers too' );
+$c = Digitizer_Cookie_Consent_Settings::sanitize( array( 'consent_version' => '4', 'consent_days' => '9999' ), Digitizer_Cookie_Consent_Settings::defaults() );
+dpt_test_eq( array( $c['consent_version'], $c['consent_days'] ), array( '4', '730' ), 'a real version is kept; days are capped at the form\'s 730' );
+
+/* The banner does not trap focus or make the page inert, so it does not claim to be modal. */
+ob_start(); $m->invoke( $f, Digitizer_Cookie_Consent_Settings::all(), Digitizer_Cookie_Consent_Settings::get_texts( 'en' ), 'en', 'ltr' ); $html = (string) ob_get_clean();
+dpt_test_ok( false !== strpos( $html, 'role="dialog"' ) && false === strpos( $html, 'aria-modal' ), 'a non-modal dialog' );
+
 /* Each category switch is named by its category, for screen readers. */
 $GLOBALS['dpt_stub_options'] = array( 'digitizer_cookie_consent' => array_merge( Digitizer_Cookie_Consent_Settings::defaults(), array( 'cat_functional_enabled' => '1', 'cat_analytics_enabled' => '1', 'cat_marketing_enabled' => '1' ) ) );
 ob_start(); $m->invoke( $f, Digitizer_Cookie_Consent_Settings::all(), Digitizer_Cookie_Consent_Settings::get_texts( 'en' ), 'en', 'ltr' ); $html = (string) ob_get_clean();

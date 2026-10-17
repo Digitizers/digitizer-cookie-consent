@@ -21,6 +21,9 @@ final class Digitizer_Cookie_Consent_Core {
 		// the same import an activated site gets.
 		if ( ! is_array( get_option( Digitizer_Cookie_Consent_Settings::OPTION ) ) ) {
 			self::seed_site();
+			// As on activation: pages cached before the plugin arrived carry
+			// no banner and no script blocking.
+			Digitizer_Cookie_Consent_Settings::purge_page_caches();
 		}
 
 		new Digitizer_Cookie_Consent_Frontend();
