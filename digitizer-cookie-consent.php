@@ -24,3 +24,9 @@ define( 'DIGITIZER_COOKIE_CONSENT_VERSION', '1.0.0' );
 define( 'DIGITIZER_COOKIE_CONSENT_FILE', __FILE__ );
 define( 'DIGITIZER_COOKIE_CONSENT_PATH', plugin_dir_path( __FILE__ ) );
 define( 'DIGITIZER_COOKIE_CONSENT_URL', plugin_dir_url( __FILE__ ) );
+
+require_once DIGITIZER_COOKIE_CONSENT_PATH . 'includes/class-digitizer-cookie-consent-settings.php';
+require_once DIGITIZER_COOKIE_CONSENT_PATH . 'includes/class-digitizer-cookie-consent-frontend.php';
+if ( is_admin() ) {
+	require_once DIGITIZER_COOKIE_CONSENT_PATH . 'includes/class-digitizer-cookie-consent-admin.php';
+}
