@@ -67,6 +67,12 @@ add_filter( 'dpt_cb_rtl_langs', function ( $langs ) { $langs[] = 'ckb'; return $
 dpt_test_eq( $f->lang_dir( 'ckb' ), 'rtl', 'and one on dpt_cb_rtl_langs still adds an RTL language' );
 $GLOBALS['dpt_stub_filters'] = array();
 
+/* A deliberate 900px / 95% box survives activation running the defaults again. */
+$GLOBALS['dpt_stub_options'] = array( 'digitizer_cookie_consent' => array_merge( Digitizer_Cookie_Consent_Settings::defaults(), array( 'width' => '900', 'max_width_pct' => '95', 'saved' => '1' ) ) );
+Digitizer_Cookie_Consent_Core::activate( false );
+$o = get_option( 'digitizer_cookie_consent' );
+dpt_test_eq( array( $o['width'], $o['max_width_pct'] ), array( '900', '95' ), 'no Digitizer Pro Tools migration resets a saved width: the plugin has no DPT database version to read' );
+
 /* Uninstall removes the option. */
 $GLOBALS['dpt_stub_options'] = array( 'digitizer_cookie_consent' => array( 'enabled' => '1' ) );
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) { define( 'WP_UNINSTALL_PLUGIN', true ); }

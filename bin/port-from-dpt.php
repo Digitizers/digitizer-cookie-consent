@@ -1,10 +1,18 @@
 <?php
 /**
- * Regenerate the plugin's code from Digitizer Pro Tools' Cookie Banner
- * module. The standalone is a renamed copy; this is the rename, so a module
- * change is mirrored by re-running it and reviewing the diff.
+ * The rename from Digitizer Pro Tools' Cookie Banner module to this plugin.
+ *
+ * It writes to port/ - a tracked, development-only copy of the module as
+ * renamed - and never to includes/, assets/ or tests/: those carry this
+ * plugin's own changes (inline output through the core APIs, the import
+ * sanitiser, its settings screen, the credit), which a regeneration would
+ * erase. To mirror a module change:
  *
  *   php bin/port-from-dpt.php [path-to-digitizer-pro-tools]
+ *   git diff port/        # exactly what changed in the module, renamed
+ *
+ * then apply that diff to the plugin's own files by hand, and commit port/
+ * with it so the next diff starts from here.
  *
  * Names the spec keeps (the consent cookie, #dpt-cookie-settings,
  * .dpt-cb-open, dpt:consent, the dpt-cb-* HTML ids and classes) are not
@@ -74,7 +82,8 @@ foreach ( $map as $from => $to ) {
 	foreach ( array( 'DPT_CB_', 'DPTCB', 'dptCbPurge', "'dpt_cookie_banner'", 'DPT_URL', 'DPT_VERSION', 'dpt_current_admin_page', 'dpt_cb_save', 'dpt_cb_add_lang', 'dpt_cb_remove_lang', 'modules/cookie-banner' ) as $left ) {
 		if ( false !== strpos( $code, $left ) ) { fwrite( STDERR, "$to still contains $left\n" ); exit( 1 ); }
 	}
-	@mkdir( dirname( "$root/$to" ), 0777, true );
-	file_put_contents( "$root/$to", $code );
-	echo "$from -> $to\n";
+	$dest = "$root/port/$to";
+	@mkdir( dirname( $dest ), 0777, true );
+	file_put_contents( $dest, $code );
+	echo "$from -> port/$to\n";
 }

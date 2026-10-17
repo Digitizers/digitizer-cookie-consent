@@ -313,19 +313,10 @@ class Digitizer_Cookie_Consent_Settings {
 		// Merge defaults for new keys, keep user's saved values.
 		$merged = array_merge( $defaults, $existing );
 
-		// v1.0.1: banner box default changed from 900px/95% to 700px/100%.
-		// Installs still carrying the exact legacy seeds get the new size;
-		// any other stored value is a deliberate admin choice and is kept.
-		// (dpt_db_version still holds the OLD version here - DPT_Plugin
-		// updates it only after all module migrations ran.)
-		$old_version = get_option( 'dpt_db_version', '0' );
-		if ( version_compare( $old_version, '1.0.1', '<' )
-			&& isset( $existing['width'], $existing['max_width_pct'] )
-			&& '900' === (string) $existing['width']
-			&& '95' === (string) $existing['max_width_pct'] ) {
-			$merged['width']         = '700';
-			$merged['max_width_pct'] = '100';
-		}
+		// The module's two v1.0.1 migrations (the 900px/95% box, the emoji in
+		// the seeded texts) are not carried over: they were gated on Digitizer
+		// Pro Tools' database version, which this plugin does not have, and an
+		// option imported from the module had already been through them there.
 
 		// Responsive width: the box used to be sized by hard-coded CSS per
 		// position, so the stored width/max_width_pct were NOT what a corner or
@@ -362,23 +353,6 @@ class Digitizer_Cookie_Consent_Settings {
 		foreach ( $merged['languages'] as $lang ) {
 			$saved = ( isset( $texts[ $lang ] ) && is_array( $texts[ $lang ] ) ) ? $texts[ $lang ] : array();
 			$merged['texts'][ $lang ] = array_merge( self::default_texts( $lang ), $saved );
-		}
-
-		// v1.0.1: emoji removed from the seeded texts. Saved copies that
-		// still hold the EXACT legacy seeds follow; customized texts stay.
-		if ( version_compare( $old_version, '1.0.1', '<' ) ) {
-			$legacy_titles = array(
-				'אנחנו משתמשים בעוגיות 🍪' => 'אנחנו משתמשים בעוגיות',
-				'We use cookies 🍪'        => 'We use cookies',
-			);
-			foreach ( $merged['texts'] as $lang => $lang_texts ) {
-				if ( isset( $lang_texts['title'] ) && isset( $legacy_titles[ $lang_texts['title'] ] ) ) {
-					$merged['texts'][ $lang ]['title'] = $legacy_titles[ $lang_texts['title'] ];
-				}
-				if ( isset( $lang_texts['float_button_text'] ) && '🍪' === trim( $lang_texts['float_button_text'] ) ) {
-					$merged['texts'][ $lang ]['float_button_text'] = '';
-				}
-			}
 		}
 
 		update_option( self::OPTION, $merged );
