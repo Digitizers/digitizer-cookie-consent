@@ -422,7 +422,7 @@ class Digitizer_Cookie_Consent_Admin {
 				<th><?php esc_html_e( 'Accept on scroll', 'digitizer-cookie-consent' ); ?></th>
 				<td>
 					<?php $this->switch_field( 'auto_accept_scroll', $o['auto_accept_scroll'] ); ?>
-					<p class="description"><?php esc_html_e( 'Not recommended for GDPR - EU law requires active consent.', 'digitizer-cookie-consent' ); ?></p>
+					<p class="description"><?php esc_html_e( 'Not recommended: scrolling past the banner is not an explicit choice.', 'digitizer-cookie-consent' ); ?></p>
 				</td>
 			</tr>
 			<tr>
