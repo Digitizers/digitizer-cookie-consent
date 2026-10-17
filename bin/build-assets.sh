@@ -6,7 +6,7 @@
 # .wordpress-org/, which is what the assets workflow uploads to SVN.
 # Neither directory ships inside the plugin - see .distignore.
 #
-# screenshot-3.png is not rendered here: it is a capture of the settings
+# screenshot-4.png is not rendered here: it is a capture of the settings
 # screen from a real WordPress site, and this script leaves it alone.
 #
 # Usage:
@@ -41,9 +41,12 @@ echo "rendering:"
 shot icon.html   256 256 1 icon-256x256.png
 shot banner.html 772 250 1 banner-772x250.png
 shot banner.html 772 250 2 banner-1544x500.png
-# Screenshots use the plugin's real stylesheet (design/*.html link to assets/closed.css).
-shot screenshot-closed.html 1280 800 1 screenshot-1.png
-shot screenshot-banner.html 1280 800 1 screenshot-2.png
+# Screenshots are the plugin's real banner markup and stylesheet over a
+# stand-in page: bin/render-screenshots.php writes design/screenshot-*.html.
+php "$ROOT/bin/render-screenshots.php" > /dev/null
+shot screenshot-he.html    1280 800 1 screenshot-1.png
+shot screenshot-en.html    1280 800 1 screenshot-2.png
+shot screenshot-prefs.html 1280 800 1 screenshot-3.png
 
 # Headless Chrome enforces a minimum window size, so a 128x128 window renders
 # the page at a larger size and crops. Downscale the 256 render instead.

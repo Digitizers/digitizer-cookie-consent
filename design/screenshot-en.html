@@ -1,0 +1,529 @@
+<!doctype html><html lang="en" dir="ltr"><head><meta charset="utf-8"><style>body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;background:#f8fafc;color:#0f172a}.hero{padding:120px 80px;background:linear-gradient(135deg,#eef2ff,#f8fafc)}.hero h1{font-size:54px;margin:0 0 16px}.hero p{font-size:20px;color:#475569;max-width:640px}.cards{display:flex;gap:24px;padding:0 80px}.card{flex:1;height:180px;border-radius:16px;background:#e2e8f0}/* Digitizer Pro Tools - Cookie Banner - Frontend */
+
+#dpt-cb-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 2147483640 !important;
+    background: rgba(0, 0, 0, 0.5);
+    pointer-events: auto;
+    opacity: 1;
+    transition: opacity 0.25s ease;
+}
+#dpt-cb-overlay.dpt-cb-hidden {
+    display: none !important;
+}
+#dpt-cb-overlay.dpt-cb-closing {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#dpt-cb-banner {
+    position: fixed !important;
+    z-index: 2147483641 !important;
+    font-family: inherit;
+    box-sizing: border-box;
+    opacity: 1;
+    pointer-events: auto;
+    transition: opacity 0.25s ease;
+    text-align: start;
+}
+#dpt-cb-banner.dpt-cb-hidden {
+    display: none !important;
+}
+#dpt-cb-banner.dpt-cb-closing {
+    opacity: 0;
+    pointer-events: none;
+}
+#dpt-cb-banner *, #dpt-cb-banner *::before, #dpt-cb-banner *::after {
+    box-sizing: border-box;
+}
+
+/* Entry animations */
+#dpt-cb-banner.dpt-cb-entering {
+    animation: dpt-cb-fade-in 0.4s ease both;
+}
+#dpt-cb-banner.dpt-cb-entering.dpt-cb-anim-slide-up {
+    animation: dpt-cb-slide-up 0.4s ease both;
+}
+#dpt-cb-banner.dpt-cb-entering.dpt-cb-anim-slide-down {
+    animation: dpt-cb-slide-down 0.4s ease both;
+}
+#dpt-cb-banner.dpt-cb-entering.dpt-cb-anim-zoom {
+    animation: dpt-cb-zoom 0.4s ease both;
+}
+#dpt-cb-banner.dpt-cb-entering.dpt-cb-anim-none {
+    animation: none;
+}
+
+@keyframes dpt-cb-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+@keyframes dpt-cb-slide-up {
+    from { opacity: 0; margin-bottom: -24px; }
+    to   { opacity: 1; margin-bottom: 0; }
+}
+@keyframes dpt-cb-slide-down {
+    from { opacity: 0; margin-top: -24px; }
+    to   { opacity: 1; margin-top: 0; }
+}
+@keyframes dpt-cb-zoom {
+    from { opacity: 0; scale: 0.92; }
+    to   { opacity: 1; scale: 1; }
+}
+
+/* Positions - centered */
+#dpt-cb-banner.dpt-cb-pos-bottom {
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+#dpt-cb-banner.dpt-cb-pos-top {
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+#dpt-cb-banner.dpt-cb-pos-center {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Positions - corners */
+#dpt-cb-banner.dpt-cb-pos-bottom-right {
+    bottom: 20px;
+    right: 20px;
+}
+#dpt-cb-banner.dpt-cb-pos-bottom-right .dpt-cb-box { width: 380px !important; max-width: 95vw; }
+
+#dpt-cb-banner.dpt-cb-pos-bottom-left {
+    bottom: 20px;
+    left: 20px;
+}
+#dpt-cb-banner.dpt-cb-pos-bottom-left .dpt-cb-box { width: 380px !important; max-width: 95vw; }
+
+/* Box */
+#dpt-cb-banner .dpt-cb-box {
+    position: relative;
+    background: #fff;
+    color: #333;
+    padding: 24px;
+    border-radius: 12px;
+    line-height: 1.5;
+    width: 100%;
+    max-width: 700px;
+}
+
+/* Inline SVG icons */
+.dpt-cb-icon {
+    display: inline-block;
+    vertical-align: -3px;
+    margin-inline-end: 4px;
+}
+#dpt-cb-float-button .dpt-cb-icon {
+    width: 55%;
+    height: 55%;
+    margin: 0;
+    vertical-align: middle;
+}
+
+/* Close X - sits at the inline-end corner in both directions */
+#dpt-cb-banner .dpt-cb-close {
+    position: absolute;
+    top: 8px;
+    inset-inline-end: 8px;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s, transform 0.2s;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    /* Inherit like the rest of the banner, so the close glyph matches the
+       site (or the configured) font instead of being pinned to Arial. */
+    font-family: inherit;
+    z-index: 2;
+}
+#dpt-cb-banner .dpt-cb-close .dpt-cb-close-icon {
+    display: block;
+    pointer-events: none;
+}
+#dpt-cb-banner .dpt-cb-close:hover {
+    opacity: 1;
+    transform: scale(1.08);
+}
+
+#dpt-cb-banner .dpt-cb-title {
+    margin: 0 0 10px;
+    line-height: 1.3;
+}
+/* "Show title" off: out of sight, still read by screen readers - the title
+   is what names the dialog (aria-labelledby). */
+#dpt-cb-banner .dpt-cb-title.dpt-cb-sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    margin: -1px !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+#dpt-cb-banner .dpt-cb-message {
+    line-height: 1.5;
+}
+#dpt-cb-banner .dpt-cb-message p { margin: 0 0 8px; }
+#dpt-cb-banner .dpt-cb-message p:last-child { margin-bottom: 0; }
+#dpt-cb-banner .dpt-cb-message a { color: inherit; text-decoration: underline; }
+/* At the end of the message the link moves to the next line whole, rather
+   than breaking between its words. */
+#dpt-cb-banner .dpt-cb-policy-inline a { white-space: nowrap; }
+
+#dpt-cb-banner .dpt-cb-policy {
+    margin: 10px 0 0;
+    font-size: 13px;
+}
+#dpt-cb-banner .dpt-cb-policy a {
+    color: inherit;
+    text-decoration: underline;
+    opacity: 0.85;
+}
+
+/* Buttons */
+#dpt-cb-banner .dpt-cb-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+}
+#dpt-cb-banner .dpt-cb-btn {
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.15s;
+    line-height: 1.3;
+    font-family: inherit;
+    white-space: nowrap;
+}
+#dpt-cb-banner .dpt-cb-btn:hover { transform: translateY(-1px); }
+#dpt-cb-banner .dpt-cb-btn:active { transform: translateY(0); }
+
+/* Settings view */
+#dpt-cb-banner .dpt-cb-settings-title {
+    margin: 0 0 16px;
+    font-size: 18px;
+    font-weight: 700;
+    color: inherit;
+}
+#dpt-cb-banner .dpt-cb-category {
+    padding: 14px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+#dpt-cb-banner .dpt-cb-category:last-of-type {
+    border-bottom: 0;
+    padding-bottom: 4px;
+}
+#dpt-cb-banner .dpt-cb-category-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+#dpt-cb-banner .dpt-cb-category-name {
+    font-weight: 600;
+    font-size: 15px;
+}
+#dpt-cb-banner .dpt-cb-category-desc {
+    margin: 0;
+    font-size: 13px;
+    opacity: 0.85;
+    line-height: 1.5;
+}
+#dpt-cb-banner .dpt-cb-always-on {
+    font-size: 12px;
+    padding: 3px 10px;
+    background: rgba(22, 163, 74, 0.15);
+    color: #15803d;
+    border-radius: 12px;
+    font-weight: 600;
+}
+
+/* Category toggle - direction-aware knob */
+.dpt-cb-toggle {
+    position: relative;
+    display: inline-block;
+    width: 42px;
+    height: 22px;
+    flex-shrink: 0;
+}
+.dpt-cb-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+.dpt-cb-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: #cbd5e1;
+    border-radius: 22px;
+    transition: 0.3s;
+}
+.dpt-cb-toggle-slider:before {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    inset-inline-start: 3px;
+    top: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: 0.3s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+.dpt-cb-toggle input:checked + .dpt-cb-toggle-slider { background: #16a34a; }
+#dpt-cb-banner[dir="ltr"] .dpt-cb-toggle input:checked + .dpt-cb-toggle-slider:before { transform: translateX(20px); }
+#dpt-cb-banner[dir="rtl"] .dpt-cb-toggle input:checked + .dpt-cb-toggle-slider:before { transform: translateX(-20px); }
+
+/* Float button */
+#dpt-cb-float-button {
+    position: fixed !important;
+    z-index: 2147483630 !important;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 0;
+    cursor: pointer;
+    line-height: 1;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+    padding: 0;
+    font-size: 22px;
+}
+#dpt-cb-float-button:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+    /* "Show on mobile" off - decided in CSS so cached HTML is device-safe */
+    .dpt-cb-hide-mobile { display: none !important; }
+
+    #dpt-cb-banner.dpt-cb-pos-bottom,
+    #dpt-cb-banner.dpt-cb-pos-top {
+        left: 10px !important;
+        right: 10px !important;
+        transform: none !important;
+    }
+    #dpt-cb-banner.dpt-cb-pos-bottom .dpt-cb-box,
+    #dpt-cb-banner.dpt-cb-pos-top .dpt-cb-box {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    #dpt-cb-banner.dpt-cb-pos-bottom-left,
+    #dpt-cb-banner.dpt-cb-pos-bottom-right {
+        left: 10px !important;
+        right: 10px !important;
+    }
+    #dpt-cb-banner.dpt-cb-pos-bottom-left .dpt-cb-box,
+    #dpt-cb-banner.dpt-cb-pos-bottom-right .dpt-cb-box {
+        width: 100% !important;
+    }
+    #dpt-cb-banner.dpt-cb-pos-center {
+        width: calc(100vw - 20px) !important;
+    }
+    #dpt-cb-banner .dpt-cb-buttons { flex-direction: column; }
+    #dpt-cb-banner .dpt-cb-btn { width: 100%; text-align: center; }
+}
+
+/* Opt-in credit under the buttons. */
+#dpt-cb-banner .dpt-cb-credit { margin: 10px 0 0; font-size: 11px; opacity: .7; text-align: center; }
+#dpt-cb-banner .dpt-cb-credit a { color: inherit; }
+					#dpt-cb-overlay { background: rgba(0,0,0,0.5); }
+						#dpt-cb-banner .dpt-cb-box {
+				background-color: #ffffff;
+				color: #333333;
+				max-width: 700px;
+				border-radius: 12px;
+				padding: 24px;
+				width: 100%;
+												box-shadow:0 10px 40px rgba(0,0,0,0.2);			}
+			/* Authoritative desktop sizing for the active position. Needed
+			   because frontend.css pins the corner box to a fixed 380px with
+			   !important, which would otherwise ignore the width setting. */
+			#dpt-cb-banner.dpt-cb-pos-bottom .dpt-cb-box {
+							max-width: 700px !important;
+				width: 100% !important;
+						}
+			#dpt-cb-banner .dpt-cb-title {
+				color: #333333;
+				font-size: 20px;
+				text-align: start;
+				font-weight: 700;
+				margin: 0 0 10px;
+							}
+			#dpt-cb-banner .dpt-cb-message {
+				color: #333333;
+				font-size: 14px;
+				text-align: start;
+							}
+			#dpt-cb-banner .dpt-cb-close {
+				color: #333333;
+				font-size: 22px;
+				width: 34px;
+				height: 34px;
+				opacity: 0.7;
+				background:transparent;			}
+						/* No title shown: the close button sits where the message begins.
+			   A float the button's size, on its side, makes the first lines
+			   wrap around it while the rest keep the full width. Matched on
+			   the markup (a button before the content, then a hidden title or
+			   none), so it also covers a language whose title is empty. The
+			   side is physical, as the button's is in each direction. */
+			#dpt-cb-banner .dpt-cb-close + .dpt-cb-main-view > .dpt-cb-title.dpt-cb-sr-only + .dpt-cb-message::before,
+			#dpt-cb-banner .dpt-cb-close + .dpt-cb-main-view > .dpt-cb-message:first-child::before {
+				content: "";
+				float: right;
+				width: 22px;
+				height: 18px;
+			}
+			#dpt-cb-banner[dir="rtl"] .dpt-cb-close + .dpt-cb-main-view > .dpt-cb-title.dpt-cb-sr-only + .dpt-cb-message::before,
+			#dpt-cb-banner[dir="rtl"] .dpt-cb-close + .dpt-cb-main-view > .dpt-cb-message:first-child::before {
+				float: left;
+			}
+									/* Same selector as frontend.css's base button rule, later in the
+			   page, so these win without !important. */
+			#dpt-cb-banner .dpt-cb-btn {
+				font-size: 14px;
+				font-weight: 600;
+							}
+									#dpt-cb-banner .dpt-cb-btn-accept {
+				background: #16a34a;
+				color: #ffffff;
+				border-radius: 6px;
+				border: 0;
+			}
+			#dpt-cb-banner .dpt-cb-btn-accept:hover { background: #15803d; }
+			#dpt-cb-banner .dpt-cb-btn-reject {
+				background: #e5e7eb;
+				color: #111827;
+				border-radius: 6px;
+				border: 0;
+			}
+			#dpt-cb-banner .dpt-cb-btn-reject:hover { background: #d1d5db; }
+			#dpt-cb-banner .dpt-cb-btn-settings {
+				background: #ffffff;
+				color: #2563eb;
+				border-radius: 6px;
+				border:1px solid currentColor;			}
+			#dpt-cb-banner .dpt-cb-btn-save {
+				background: #2563eb;
+				color: #ffffff;
+				border-radius: 6px;
+				border: 0;
+			}
+			#dpt-cb-float-button {
+				background: #2563eb;
+				color: #ffffff;
+				width: 50px;
+				height: 50px;
+				bottom:20px !important;right:20px !important;top:auto !important;left:auto !important;			}
+			@media (max-width: 640px) {
+				/* Same selector shape and !important as the position rules in
+				   frontend.css (which force bars/corners to 100%), so the
+				   configured mobile size wins on later source order. On mobile
+				   the corner banner is stretched to left/right:10px, so it is no
+				   longer shrink-to-fit and a percentage width resolves normally. */
+				#dpt-cb-banner.dpt-cb-pos-bottom .dpt-cb-box {
+					max-width: 700px !important;
+					width: 100% !important;
+					/* frontend.css stretches the mobile container to
+					   left:10px/right:10px, so a box narrower than 100% would
+					   sit against its left edge - a bottom-right banner would
+					   look bottom-left and bars would lose their centering.
+					   Keep the box on the side its position names. Physical
+					   margins on purpose: the position names are physical, so
+					   they must not flip with the RTL/LTR text direction. */
+					margin-left: auto !important;
+					margin-right: auto !important;
+				}
+								#dpt-cb-float-button {
+					width: 44px !important;
+					height: 44px !important;
+					bottom:15px !important;right:15px !important;top:auto !important;left:auto !important;				}
+			}
+		</style></head><body><div class="hero"><h1>A design and web studio</h1><p>A sample page behind the banner.</p></div><div class="cards"><div class="card"></div><div class="card"></div><div class="card"></div></div>		
+		<div id="dpt-cb-banner"
+		     class="dpt-cb-pos-bottom dpt-cb-anim-slide-up"
+		     dir="ltr"
+		     lang="en"
+		     		     role="dialog" aria-labelledby="dpt-cb-title" aria-modal="true">
+			<div class="dpt-cb-box">
+														<button type="button" class="dpt-cb-close" data-dpt-cb-action="reject" aria-label="Close">&times;</button>
+				
+				<div class="dpt-cb-main-view">
+																	<h2 id="dpt-cb-title" class="dpt-cb-title">We use cookies</h2>
+										<div class="dpt-cb-message"><p>Our website uses cookies to improve your browsing experience, personalize content and analyze our traffic. By clicking "Accept all" you consent to the use of cookies. You can manage your preferences at any time.</p>
+</div>
+<p class="dpt-cb-policy"><a href="https://example.test/privacy/" target="_blank" rel="noopener">Privacy policy</a></p>
+					<div class="dpt-cb-buttons">
+						<button type="button" class="dpt-cb-btn dpt-cb-btn-accept" data-dpt-cb-action="accept">Accept all</button>
+													<button type="button" class="dpt-cb-btn dpt-cb-btn-reject" data-dpt-cb-action="reject">Reject all</button>
+																			<button type="button" class="dpt-cb-btn dpt-cb-btn-settings" data-dpt-cb-action="show-settings">Advanced settings</button>
+											</div>
+									</div>
+
+				<div class="dpt-cb-settings-view" style="display:none;">
+					<h3 class="dpt-cb-settings-title">Manage cookie preferences</h3>
+
+					<div class="dpt-cb-category">
+						<div class="dpt-cb-category-head">
+							<span class="dpt-cb-category-name"><svg class="dpt-cb-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> Essential cookies</span>
+							<span class="dpt-cb-always-on">Always active</span>
+						</div>
+						<p class="dpt-cb-category-desc">Essential cookies are required for the basic functionality of the website and cannot be disabled.</p>
+					</div>
+
+										<div class="dpt-cb-category">
+						<div class="dpt-cb-category-head">
+							<span class="dpt-cb-category-name"><svg class="dpt-cb-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg> Functional</span>
+							<label class="dpt-cb-toggle"><input type="checkbox" data-dpt-cb-cat="functional" /><span class="dpt-cb-toggle-slider"></span></label>
+						</div>
+						<p class="dpt-cb-category-desc">Functional cookies enable saving preferences such as language and region.</p>
+					</div>
+					
+										<div class="dpt-cb-category">
+						<div class="dpt-cb-category-head">
+							<span class="dpt-cb-category-name"><svg class="dpt-cb-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg> Performance / Analytics</span>
+							<label class="dpt-cb-toggle"><input type="checkbox" data-dpt-cb-cat="analytics" /><span class="dpt-cb-toggle-slider"></span></label>
+						</div>
+						<p class="dpt-cb-category-desc">Performance cookies help us understand how visitors use the website and allow us to improve it.</p>
+					</div>
+					
+										<div class="dpt-cb-category">
+						<div class="dpt-cb-category-head">
+							<span class="dpt-cb-category-name"><svg class="dpt-cb-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m3 11 18-5v12L3 14v-3z"></path><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"></path></svg> Marketing</span>
+							<label class="dpt-cb-toggle"><input type="checkbox" data-dpt-cb-cat="marketing" /><span class="dpt-cb-toggle-slider"></span></label>
+						</div>
+						<p class="dpt-cb-category-desc">Marketing cookies are used to show you relevant ads based on your activity on the website.</p>
+					</div>
+					
+					<div class="dpt-cb-buttons">
+						<button type="button" class="dpt-cb-btn dpt-cb-btn-save" data-dpt-cb-action="save-settings">Save preferences</button>
+						<button type="button" class="dpt-cb-btn dpt-cb-btn-accept" data-dpt-cb-action="accept">Accept all</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		</body></html>

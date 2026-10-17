@@ -1,0 +1,46 @@
+<style>
+  html,body{margin:0;padding:0}
+  .b{position:relative;width:772px;height:250px;overflow:hidden;
+     background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);
+     font-family:system-ui,-apple-system,'Segoe UI',sans-serif}
+  .grid{position:absolute;inset:0;opacity:.05;
+     background-image:linear-gradient(#fff 1px,transparent 1px),linear-gradient(90deg,#fff 1px,transparent 1px);
+     background-size:50px 50px}
+  .glow{position:absolute;border-radius:50%;background:#a78bfa;filter:blur(60px)}
+  .g1{width:260px;height:260px;right:-60px;top:-90px;opacity:.22}
+  .g2{width:200px;height:200px;left:-80px;bottom:-90px;opacity:.09}
+  .wrap{position:absolute;left:52px;top:44px;display:flex;gap:30px;align-items:flex-start}
+  .mark{width:92px;height:92px;flex:none}
+  .kicker{font-size:13px;letter-spacing:2.6px;font-weight:600;color:#a78bfa;text-transform:uppercase;margin:2px 0 12px}
+  .h{font-size:27px;line-height:1.24;font-weight:700;color:#fff;letter-spacing:-.4px;margin:0}
+  .h em{font-style:normal;color:#94a3b8}
+  .rule{width:64px;height:3px;border-radius:2px;background:#a78bfa;opacity:.7;margin-top:18px}
+  .chips{position:absolute;right:44px;top:62px;display:flex;flex-direction:column;gap:12px;align-items:flex-end}
+  .chip{display:flex;align-items:center;gap:10px;padding:8px 15px;border-radius:999px;
+        border:1px solid rgba(148,163,184,.28);background:rgba(15,23,42,.5);
+        font-size:13px;font-weight:600;letter-spacing:.3px;color:#cbd5e1}
+  .dot{width:7px;height:7px;border-radius:50%;background:#a78bfa}
+  .off .dot{background:#64748b}
+</style>
+<div class="b">
+  <div class="grid"></div><div class="glow g1"></div><div class="glow g2"></div>
+  <div class="wrap">
+    <svg class="mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+      <path d="M128 28a100 100 0 1 0 100 100 40 40 0 0 1-50-50 40 40 0 0 1-50-50z" fill="#fff"/>
+      <circle cx="92" cy="104" r="12" fill="#a78bfa"/>
+      <circle cx="150" cy="150" r="10" fill="#a78bfa"/>
+      <circle cx="100" cy="172" r="9" fill="#0f172a" opacity=".55"/>
+      <circle cx="176" cy="114" r="8" fill="#0f172a" opacity=".55"/>
+    </svg>
+    <div>
+      <div class="kicker">Digitizer Cookie Consent</div>
+      <p class="h">Ask first.<br><em>Load the tags after.</em></p>
+      <div class="rule"></div>
+    </div>
+  </div>
+  <div class="chips">
+    <div class="chip"><span class="dot"></span>Google Consent Mode v2</div>
+    <div class="chip"><span class="dot"></span>עברית · English · any language</div>
+    <div class="chip off"><span class="dot"></span>Refused cookies deleted</div>
+  </div>
+</div>
