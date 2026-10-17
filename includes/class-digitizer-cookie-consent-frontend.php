@@ -1223,8 +1223,8 @@ class Digitizer_Cookie_Consent_Frontend {
 					<?php if ( '1' === $o['cat_functional_enabled'] ) : ?>
 					<div class="dpt-cb-category">
 						<div class="dpt-cb-category-head">
-							<span class="dpt-cb-category-name"><?php $this->print_icon( 'sliders' ); ?> <?php echo esc_html( $t['cat_functional_name'] ); ?></span>
-							<label class="dpt-cb-toggle"><input type="checkbox" data-dpt-cb-cat="functional" /><span class="dpt-cb-toggle-slider"></span></label>
+							<span class="dpt-cb-category-name" id="dpt-cb-cat-name-functional"><?php $this->print_icon( 'sliders' ); ?> <?php echo esc_html( $t['cat_functional_name'] ); ?></span>
+							<label class="dpt-cb-toggle"><input type="checkbox" data-dpt-cb-cat="functional" aria-labelledby="dpt-cb-cat-name-functional" /><span class="dpt-cb-toggle-slider"></span></label>
 						</div>
 						<p class="dpt-cb-category-desc"><?php echo wp_kses_post( $t['cat_functional_desc'] ); ?></p>
 					</div>
@@ -1233,8 +1233,8 @@ class Digitizer_Cookie_Consent_Frontend {
 					<?php if ( '1' === $o['cat_analytics_enabled'] ) : ?>
 					<div class="dpt-cb-category">
 						<div class="dpt-cb-category-head">
-							<span class="dpt-cb-category-name"><?php $this->print_icon( 'chart' ); ?> <?php echo esc_html( $t['cat_analytics_name'] ); ?></span>
-							<label class="dpt-cb-toggle"><input type="checkbox" data-dpt-cb-cat="analytics" /><span class="dpt-cb-toggle-slider"></span></label>
+							<span class="dpt-cb-category-name" id="dpt-cb-cat-name-analytics"><?php $this->print_icon( 'chart' ); ?> <?php echo esc_html( $t['cat_analytics_name'] ); ?></span>
+							<label class="dpt-cb-toggle"><input type="checkbox" data-dpt-cb-cat="analytics" aria-labelledby="dpt-cb-cat-name-analytics" /><span class="dpt-cb-toggle-slider"></span></label>
 						</div>
 						<p class="dpt-cb-category-desc"><?php echo wp_kses_post( $t['cat_analytics_desc'] ); ?></p>
 					</div>
@@ -1243,8 +1243,8 @@ class Digitizer_Cookie_Consent_Frontend {
 					<?php if ( '1' === $o['cat_marketing_enabled'] ) : ?>
 					<div class="dpt-cb-category">
 						<div class="dpt-cb-category-head">
-							<span class="dpt-cb-category-name"><?php $this->print_icon( 'megaphone' ); ?> <?php echo esc_html( $t['cat_marketing_name'] ); ?></span>
-							<label class="dpt-cb-toggle"><input type="checkbox" data-dpt-cb-cat="marketing" /><span class="dpt-cb-toggle-slider"></span></label>
+							<span class="dpt-cb-category-name" id="dpt-cb-cat-name-marketing"><?php $this->print_icon( 'megaphone' ); ?> <?php echo esc_html( $t['cat_marketing_name'] ); ?></span>
+							<label class="dpt-cb-toggle"><input type="checkbox" data-dpt-cb-cat="marketing" aria-labelledby="dpt-cb-cat-name-marketing" /><span class="dpt-cb-toggle-slider"></span></label>
 						</div>
 						<p class="dpt-cb-category-desc"><?php echo wp_kses_post( $t['cat_marketing_desc'] ); ?></p>
 					</div>

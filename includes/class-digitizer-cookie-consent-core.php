@@ -56,6 +56,10 @@ final class Digitizer_Cookie_Consent_Core {
 			$network_wide,
 			function () {
 				Digitizer_Cookie_Consent_Core::seed_site();
+				// Pages cached before activation carry no banner and no script
+				// blocking; until they expire, visitors would get the trackers
+				// without being asked.
+				Digitizer_Cookie_Consent_Settings::purge_page_caches();
 			}
 		);
 	}

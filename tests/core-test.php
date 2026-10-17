@@ -73,6 +73,22 @@ Digitizer_Cookie_Consent_Core::activate( false );
 $o = get_option( 'digitizer_cookie_consent' );
 dpt_test_eq( array( $o['width'], $o['max_width_pct'] ), array( '900', '95' ), 'no Digitizer Pro Tools migration resets a saved width: the plugin has no DPT database version to read' );
 
+/* Activation empties full-page caches: pages cached before it carry no banner and no script blocking. */
+$GLOBALS['dpt_test_purges'] = 0;
+if ( ! function_exists( 'rocket_clean_domain' ) ) { function rocket_clean_domain() { $GLOBALS['dpt_test_purges']++; } }
+$GLOBALS['dpt_stub_options'] = array();
+Digitizer_Cookie_Consent_Core::activate( false );
+dpt_test_eq( $GLOBALS['dpt_test_purges'], 1, 'a fresh activation purges the page cache once' );
+
+/* Each category switch is named by its category, for screen readers. */
+$GLOBALS['dpt_stub_options'] = array( 'digitizer_cookie_consent' => array_merge( Digitizer_Cookie_Consent_Settings::defaults(), array( 'cat_functional_enabled' => '1', 'cat_analytics_enabled' => '1', 'cat_marketing_enabled' => '1' ) ) );
+ob_start(); $m->invoke( $f, Digitizer_Cookie_Consent_Settings::all(), Digitizer_Cookie_Consent_Settings::get_texts( 'en' ), 'en', 'ltr' ); $html = (string) ob_get_clean();
+foreach ( array( 'functional', 'analytics', 'marketing' ) as $cat ) {
+	$ok = preg_match( '#<input type="checkbox" data-dpt-cb-cat="' . $cat . '" aria-labelledby="([a-z0-9-]+)"#', $html, $hit )
+		&& false !== strpos( $html, 'id="' . $hit[1] . '"' );
+	dpt_test_ok( (bool) $ok, "the $cat switch is labelled by its category name" );
+}
+
 /* Uninstall removes the option. */
 $GLOBALS['dpt_stub_options'] = array( 'digitizer_cookie_consent' => array( 'enabled' => '1' ) );
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) { define( 'WP_UNINSTALL_PLUGIN', true ); }
