@@ -9,1045 +9,1041 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Domain: digitizer-cookie-consent\n"
 
-#: includes/class-digitizer-cookie-consent-admin.php:34 includes/class-digitizer-cookie-consent-admin.php:35 includes/class-digitizer-cookie-consent-admin.php:257
+#: includes/class-digitizer-cookie-consent-admin.php:36 includes/class-digitizer-cookie-consent-admin.php:37 includes/class-digitizer-cookie-consent-admin.php:299
 msgid "Cookie Consent"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:84 includes/class-digitizer-cookie-consent-admin.php:108
+#: includes/class-digitizer-cookie-consent-admin.php:86 includes/class-digitizer-cookie-consent-admin.php:110
 msgid "Settings"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:106
+#: includes/class-digitizer-cookie-consent-admin.php:108
 msgid "Digitizer Cookie Consent is showing the banner with its default texts. Review the texts and categories."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:147
-msgid "Settings saved."
+#: includes/class-digitizer-cookie-consent-admin.php:131
+msgid "Your scripts from Digitizer Pro Tools were not brought over."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:150
-msgid "Language added."
+#: includes/class-digitizer-cookie-consent-admin.php:132
+msgid "This plugin does not store or add code. Put each script back in your theme, a header plugin or Google Tag Manager, and change its opening tag as shown under Settings > Cookie Consent > Scripts, so it still waits for consent."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:153
-msgid "Language removed."
+#: includes/class-digitizer-cookie-consent-admin.php:137
+msgid "I have moved them"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:156
-msgid "Invalid language code. Use formats like \"en\", \"ru\" or \"pt_BR\"."
-msgstr ""
-
-#: includes/class-digitizer-cookie-consent-admin.php:167 includes/class-digitizer-cookie-consent-admin.php:195 includes/class-digitizer-cookie-consent-admin.php:215
+#: includes/class-digitizer-cookie-consent-admin.php:144 includes/class-digitizer-cookie-consent-admin.php:209 includes/class-digitizer-cookie-consent-admin.php:237 includes/class-digitizer-cookie-consent-admin.php:257
 msgid "You are not allowed to do that."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:242
+#: includes/class-digitizer-cookie-consent-admin.php:189
+msgid "Settings saved."
+msgstr ""
+
+#: includes/class-digitizer-cookie-consent-admin.php:192
+msgid "Language added."
+msgstr ""
+
+#: includes/class-digitizer-cookie-consent-admin.php:195
+msgid "Language removed."
+msgstr ""
+
+#: includes/class-digitizer-cookie-consent-admin.php:198
+msgid "Invalid language code. Use formats like \"en\", \"ru\" or \"pt_BR\"."
+msgstr ""
+
+#: includes/class-digitizer-cookie-consent-admin.php:284
 msgid "General"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:243 includes/class-digitizer-cookie-consent-admin.php:496
+#: includes/class-digitizer-cookie-consent-admin.php:285 includes/class-digitizer-cookie-consent-admin.php:531
 msgid "Texts"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:244
+#: includes/class-digitizer-cookie-consent-admin.php:286
 msgid "Design"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:245 includes/class-digitizer-cookie-consent-admin.php:1045
+#: includes/class-digitizer-cookie-consent-admin.php:287 includes/class-digitizer-cookie-consent-admin.php:1080
 msgid "Typography"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:246
+#: includes/class-digitizer-cookie-consent-admin.php:288
 msgid "Buttons"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:247
+#: includes/class-digitizer-cookie-consent-admin.php:289
 msgid "Categories"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:248
+#: includes/class-digitizer-cookie-consent-admin.php:290
 msgid "Scripts"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:249
+#: includes/class-digitizer-cookie-consent-admin.php:291
 msgid "Floating Button"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:285
+#: includes/class-digitizer-cookie-consent-admin.php:327
 msgid "Save Settings"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:319
+#: includes/class-digitizer-cookie-consent-admin.php:361
 msgid "Hebrew"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:320
+#: includes/class-digitizer-cookie-consent-admin.php:362
 msgid "English"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:321
+#: includes/class-digitizer-cookie-consent-admin.php:363
 msgid "Arabic"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:322
+#: includes/class-digitizer-cookie-consent-admin.php:364
 msgid "Russian"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:323
+#: includes/class-digitizer-cookie-consent-admin.php:365
 msgid "French"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:324
+#: includes/class-digitizer-cookie-consent-admin.php:366
 msgid "Spanish"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:325
+#: includes/class-digitizer-cookie-consent-admin.php:367
 msgid "German"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:370
+#: includes/class-digitizer-cookie-consent-admin.php:412
 msgid "General Settings"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:373
+#: includes/class-digitizer-cookie-consent-admin.php:415
 msgid "Enable banner"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:376
+#: includes/class-digitizer-cookie-consent-admin.php:418
 msgid "When disabled, the banner is not shown at all."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:380
+#: includes/class-digitizer-cookie-consent-admin.php:422
 msgid "Banner position"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:384
+#: includes/class-digitizer-cookie-consent-admin.php:426
 msgid "Full-width bar at the bottom"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:385
+#: includes/class-digitizer-cookie-consent-admin.php:427
 msgid "Full-width bar at the top"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:386
+#: includes/class-digitizer-cookie-consent-admin.php:428
 msgid "Centered modal"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:387 includes/class-digitizer-cookie-consent-admin.php:1361
+#: includes/class-digitizer-cookie-consent-admin.php:429 includes/class-digitizer-cookie-consent-admin.php:1392
 msgid "Bottom-left corner"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:388 includes/class-digitizer-cookie-consent-admin.php:1360
+#: includes/class-digitizer-cookie-consent-admin.php:430 includes/class-digitizer-cookie-consent-admin.php:1391
 msgid "Bottom-right corner"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:399
+#: includes/class-digitizer-cookie-consent-admin.php:441
 msgid "Entry animation"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:403
+#: includes/class-digitizer-cookie-consent-admin.php:445
 msgid "Slide up"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:404
+#: includes/class-digitizer-cookie-consent-admin.php:446
 msgid "Slide down"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:405
+#: includes/class-digitizer-cookie-consent-admin.php:447
 msgid "Fade"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:406
+#: includes/class-digitizer-cookie-consent-admin.php:448
 msgid "Zoom"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:407
+#: includes/class-digitizer-cookie-consent-admin.php:449
 msgid "None"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:418
+#: includes/class-digitizer-cookie-consent-admin.php:460
 msgid "Show on mobile"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:422
+#: includes/class-digitizer-cookie-consent-admin.php:464
 msgid "Accept on scroll"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:425
+#: includes/class-digitizer-cookie-consent-admin.php:467
 msgid "Not recommended: scrolling past the banner is not an explicit choice."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:429
-msgid "Block scripts until consent"
-msgstr ""
-
-#: includes/class-digitizer-cookie-consent-admin.php:432
-msgid "Scripts from the \"Scripts\" tab load only after the visitor consents to the matching category."
-msgstr ""
-
-#: includes/class-digitizer-cookie-consent-admin.php:436
+#: includes/class-digitizer-cookie-consent-admin.php:471
 msgid "Credit"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:439
+#: includes/class-digitizer-cookie-consent-admin.php:474
 msgid "Show \"Cookie consent by Digitizer\" under the buttons"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:443
+#: includes/class-digitizer-cookie-consent-admin.php:478
 msgid "Google Consent Mode v2"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:446
+#: includes/class-digitizer-cookie-consent-admin.php:481
 msgid "Tells Google tags (Analytics, Ads, Tag Manager) what the visitor allowed: analytics grants analytics storage, marketing grants ad storage, ad user data and ad personalization, functional grants personalization storage. These start denied until the visitor chooses; functionality and security storage, the essential kind, are always granted."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:447
+#: includes/class-digitizer-cookie-consent-admin.php:482
 msgid "Google tags pasted in the \"Scripts\" tab still load only after consent. Google tags added any other way (Site Kit, a GTM plugin, the theme) load at once and follow these signals."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:451
+#: includes/class-digitizer-cookie-consent-admin.php:486
 msgid "WP Consent API"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:454
+#: includes/class-digitizer-cookie-consent-admin.php:489
 msgid "Shares the visitor's choice with plugins that read the WP Consent API, such as Site Kit and WooCommerce order attribution."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:456
+#: includes/class-digitizer-cookie-consent-admin.php:491
 msgid "Consent Mode and the WP Consent API are not sent while the banner is off or hidden on mobile: visitors who cannot see the banner could never grant anything."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:459
+#: includes/class-digitizer-cookie-consent-admin.php:494
 msgid "The WP Consent API plugin is not active on this site, so this switch has no effect until it is."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:464
+#: includes/class-digitizer-cookie-consent-admin.php:499
 msgid "Consent lifetime (days)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:467
+#: includes/class-digitizer-cookie-consent-admin.php:502
 msgid "After this many days the visitor is asked again."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:471
+#: includes/class-digitizer-cookie-consent-admin.php:506
 msgid "Consent version"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:474
+#: includes/class-digitizer-cookie-consent-admin.php:509
 msgid "Increase this number to ask ALL visitors for consent again (for example after changing your cookie policy). Popular page caches (WP Rocket, LiteSpeed, Super Cache, W3TC, Fastest Cache, SiteGround) are purged automatically when it changes."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:478
+#: includes/class-digitizer-cookie-consent-admin.php:513
 msgid "Show delay (seconds)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:481
+#: includes/class-digitizer-cookie-consent-admin.php:516
 msgid "0 = show immediately. 5 = show after 5 seconds, so the banner does not interrupt visitors right away."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:497
+#: includes/class-digitizer-cookie-consent-admin.php:532
 msgid "The banner picks the language automatically from the current page locale (WPML / Polylang / TranslatePress compatible), falling back to the default language."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:505
+#: includes/class-digitizer-cookie-consent-admin.php:540
 msgid "default"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:513
+#: includes/class-digitizer-cookie-consent-admin.php:548
 msgid "Banner title"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:517
+#: includes/class-digitizer-cookie-consent-admin.php:552
 msgid "Banner message"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:520
+#: includes/class-digitizer-cookie-consent-admin.php:555
 msgid "Basic HTML is allowed: <strong>, <em>, <a>, <br>"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:524 includes/class-digitizer-cookie-consent-admin.php:1189
+#: includes/class-digitizer-cookie-consent-admin.php:559 includes/class-digitizer-cookie-consent-admin.php:1224
 msgid "\"Accept all\" button"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:528 includes/class-digitizer-cookie-consent-admin.php:1192
+#: includes/class-digitizer-cookie-consent-admin.php:563 includes/class-digitizer-cookie-consent-admin.php:1227
 msgid "\"Reject all\" button"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:532 includes/class-digitizer-cookie-consent-admin.php:1201
+#: includes/class-digitizer-cookie-consent-admin.php:567 includes/class-digitizer-cookie-consent-admin.php:1236
 msgid "\"Settings\" button"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:536 includes/class-digitizer-cookie-consent-admin.php:1210
+#: includes/class-digitizer-cookie-consent-admin.php:571 includes/class-digitizer-cookie-consent-admin.php:1245
 msgid "\"Save preferences\" button"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:540
+#: includes/class-digitizer-cookie-consent-admin.php:575
 msgid "Preferences screen title"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:544
+#: includes/class-digitizer-cookie-consent-admin.php:579
 msgid "\"Always active\" label"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:548
+#: includes/class-digitizer-cookie-consent-admin.php:583
 msgid "Close button label (accessibility)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:552
+#: includes/class-digitizer-cookie-consent-admin.php:587
 msgid "Privacy policy link text"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:557
+#: includes/class-digitizer-cookie-consent-admin.php:592
 msgid "Category names and descriptions"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:560
+#: includes/class-digitizer-cookie-consent-admin.php:595
 msgid "Essential - name"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:564
+#: includes/class-digitizer-cookie-consent-admin.php:599
 msgid "Essential - description"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:568
+#: includes/class-digitizer-cookie-consent-admin.php:603
 msgid "Functional - name"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:572
+#: includes/class-digitizer-cookie-consent-admin.php:607
 msgid "Functional - description"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:576
+#: includes/class-digitizer-cookie-consent-admin.php:611
 msgid "Analytics - name"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:580
+#: includes/class-digitizer-cookie-consent-admin.php:615
 msgid "Analytics - description"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:584
+#: includes/class-digitizer-cookie-consent-admin.php:619
 msgid "Marketing - name"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:588
+#: includes/class-digitizer-cookie-consent-admin.php:623
 msgid "Marketing - description"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:593
+#: includes/class-digitizer-cookie-consent-admin.php:628
 msgid "Floating button texts"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:596
+#: includes/class-digitizer-cookie-consent-admin.php:631
 msgid "Button content"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:599
+#: includes/class-digitizer-cookie-consent-admin.php:634
 msgid "Leave empty for the built-in cookie icon, or type short text of your own."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:603
+#: includes/class-digitizer-cookie-consent-admin.php:638
 msgid "Button label (accessibility)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:608
+#: includes/class-digitizer-cookie-consent-admin.php:643
 msgid "Privacy policy link (shared for all languages)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:611
+#: includes/class-digitizer-cookie-consent-admin.php:646
 msgid "Privacy policy page"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:617
+#: includes/class-digitizer-cookie-consent-admin.php:652
 msgid "— No link —"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:622
+#: includes/class-digitizer-cookie-consent-admin.php:657
 msgid "Pick the privacy policy page. With WPML or Polylang, the translated page is linked automatically per language."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:626
+#: includes/class-digitizer-cookie-consent-admin.php:661
 msgid "Or an external URL (instead of a page)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:629
+#: includes/class-digitizer-cookie-consent-admin.php:664
 msgid "Only if the policy lives outside this site. Leave empty when a page is selected above."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:633
+#: includes/class-digitizer-cookie-consent-admin.php:668
 msgid "Link at the end of the message"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:636
+#: includes/class-digitizer-cookie-consent-admin.php:671
 msgid "Off puts the link on a line of its own under the message."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:640
+#: includes/class-digitizer-cookie-consent-admin.php:675
 msgid "Link color"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:643
+#: includes/class-digitizer-cookie-consent-admin.php:678
 msgid "Empty = the color of the text around it."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:647
+#: includes/class-digitizer-cookie-consent-admin.php:682
 msgid "A link that reopens the banner"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:650
+#: includes/class-digitizer-cookie-consent-admin.php:685
 msgid "Any link to #dpt-cookie-settings, or any element with the class dpt-cb-open, opens the banner so a visitor can change their choice - for example a footer link instead of the floating button. The shortcode prints such a link; text=\"...\" sets its wording."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:654
+#: includes/class-digitizer-cookie-consent-admin.php:689
 msgid "Default language"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:661
+#: includes/class-digitizer-cookie-consent-admin.php:696
 msgid "Used when the page locale has no matching language."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:674
+#: includes/class-digitizer-cookie-consent-admin.php:709
 msgid "Manage languages"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:679
+#: includes/class-digitizer-cookie-consent-admin.php:714
 msgid "Add language (code):"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:681
+#: includes/class-digitizer-cookie-consent-admin.php:716
 msgid "Add"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:686
+#: includes/class-digitizer-cookie-consent-admin.php:721
 msgid "Remove this language and its texts?"
 msgstr ""
 
 #. translators: %s: language label
-#: includes/class-digitizer-cookie-consent-admin.php:693
+#: includes/class-digitizer-cookie-consent-admin.php:728
 msgid "Remove \"%s\""
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:699
+#: includes/class-digitizer-cookie-consent-admin.php:734
 msgid "New languages start with the English texts. The default language cannot be removed."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:706
+#: includes/class-digitizer-cookie-consent-admin.php:741
 msgid "Banner Design"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:711
+#: includes/class-digitizer-cookie-consent-admin.php:746
 msgid "Inherit from the site (recommended)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:712
+#: includes/class-digitizer-cookie-consent-admin.php:747
 msgid "Elementor primary font"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:713 includes/class-digitizer-cookie-consent-admin.php:745
+#: includes/class-digitizer-cookie-consent-admin.php:748 includes/class-digitizer-cookie-consent-admin.php:780
 msgid "Custom font stack"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:716
+#: includes/class-digitizer-cookie-consent-admin.php:751
 msgid "Font"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:719
+#: includes/class-digitizer-cookie-consent-admin.php:754
 msgid "Font family"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:727
+#: includes/class-digitizer-cookie-consent-admin.php:762
 msgid "By default the banner inherits the font of the page, so it matches your theme automatically. Pick Elementor to follow its primary global font explicitly, or set your own stack below."
 msgstr ""
 
 #. translators: %s: font family name detected from Elementor
-#: includes/class-digitizer-cookie-consent-admin.php:734
+#: includes/class-digitizer-cookie-consent-admin.php:769
 msgid "Elementor primary font detected: %s"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:740
+#: includes/class-digitizer-cookie-consent-admin.php:775
 msgid "No Elementor primary font detected on this site - that option will fall back to inheriting."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:748
+#: includes/class-digitizer-cookie-consent-admin.php:783
 msgid "Used only when \"Custom font stack\" is selected. The font itself must already be loaded by the theme - this setting does not load web fonts."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:753
+#: includes/class-digitizer-cookie-consent-admin.php:788
 msgid "Colors and background"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:756 includes/class-digitizer-cookie-consent-admin.php:1222 includes/class-digitizer-cookie-consent-admin.php:1375
+#: includes/class-digitizer-cookie-consent-admin.php:791 includes/class-digitizer-cookie-consent-admin.php:1257 includes/class-digitizer-cookie-consent-admin.php:1406
 msgid "Background color"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:760
+#: includes/class-digitizer-cookie-consent-admin.php:795
 msgid "Base text color"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:764
+#: includes/class-digitizer-cookie-consent-admin.php:799
 msgid "Box shadow"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:769
+#: includes/class-digitizer-cookie-consent-admin.php:804
 msgid "Page overlay (dim the site behind the banner)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:772
+#: includes/class-digitizer-cookie-consent-admin.php:807
 msgid "Enable overlay"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:775
+#: includes/class-digitizer-cookie-consent-admin.php:810
 msgid "Dims the page behind the banner, prompting the visitor to choose."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:779
+#: includes/class-digitizer-cookie-consent-admin.php:814
 msgid "Overlay color"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:783
+#: includes/class-digitizer-cookie-consent-admin.php:818
 msgid "Overlay opacity (0-1)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:788 includes/class-digitizer-cookie-consent-admin.php:791
+#: includes/class-digitizer-cookie-consent-admin.php:823 includes/class-digitizer-cookie-consent-admin.php:826
 msgid "Background image"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:802
+#: includes/class-digitizer-cookie-consent-admin.php:837
 msgid "Choose image"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:803
+#: includes/class-digitizer-cookie-consent-admin.php:838
 msgid "Remove image"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:809
+#: includes/class-digitizer-cookie-consent-admin.php:844
 msgid "Image size"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:820
+#: includes/class-digitizer-cookie-consent-admin.php:855
 msgid "Image position"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:824 includes/class-digitizer-cookie-consent-admin.php:1039
+#: includes/class-digitizer-cookie-consent-admin.php:859 includes/class-digitizer-cookie-consent-admin.php:1074
 msgid "Center"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:825
+#: includes/class-digitizer-cookie-consent-admin.php:860
 msgid "Top (center)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:826
+#: includes/class-digitizer-cookie-consent-admin.php:861
 msgid "Bottom (center)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:827
+#: includes/class-digitizer-cookie-consent-admin.php:862
 msgid "Top left"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:828
+#: includes/class-digitizer-cookie-consent-admin.php:863
 msgid "Top right"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:829
+#: includes/class-digitizer-cookie-consent-admin.php:864
 msgid "Bottom left"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:830
+#: includes/class-digitizer-cookie-consent-admin.php:865
 msgid "Bottom right"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:831
+#: includes/class-digitizer-cookie-consent-admin.php:866
 msgid "Left side"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:832
+#: includes/class-digitizer-cookie-consent-admin.php:867
 msgid "Right side"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:843 includes/class-digitizer-cookie-consent-admin.php:848
+#: includes/class-digitizer-cookie-consent-admin.php:878 includes/class-digitizer-cookie-consent-admin.php:883
 msgid "Repeat"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:847
+#: includes/class-digitizer-cookie-consent-admin.php:882
 msgid "No repeat"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:849
+#: includes/class-digitizer-cookie-consent-admin.php:884
 msgid "Horizontal"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:850
+#: includes/class-digitizer-cookie-consent-admin.php:885
 msgid "Vertical"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:861
+#: includes/class-digitizer-cookie-consent-admin.php:896
 msgid "Image overlay color"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:864
+#: includes/class-digitizer-cookie-consent-admin.php:899
 msgid "Darkens a bright image so the text stays readable."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:868
+#: includes/class-digitizer-cookie-consent-admin.php:903
 msgid "Image overlay opacity (0-1)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:873
+#: includes/class-digitizer-cookie-consent-admin.php:908
 msgid "Layout and border"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:876
+#: includes/class-digitizer-cookie-consent-admin.php:911
 msgid "Max width on desktop (px)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:879
+#: includes/class-digitizer-cookie-consent-admin.php:914
 msgid "Used by the full-width bars and the centered modal. Corner positions have their own width below."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:883
+#: includes/class-digitizer-cookie-consent-admin.php:918
 msgid "Corner width on desktop (px)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:886
+#: includes/class-digitizer-cookie-consent-admin.php:921
 msgid "Only for the bottom-left / bottom-right corner positions, which sit next to the content instead of stretching across it. Try 380-450px for a compact card."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:890
+#: includes/class-digitizer-cookie-consent-admin.php:925
 msgid "Corner distance from the side (px)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:893
+#: includes/class-digitizer-cookie-consent-admin.php:928
 msgid "Corner positions on desktop: from the left edge for bottom-left, from the right edge for bottom-right."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:897
+#: includes/class-digitizer-cookie-consent-admin.php:932
 msgid "Corner distance from the bottom (px)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:901
+#: includes/class-digitizer-cookie-consent-admin.php:936
 msgid "Width on desktop (%)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:904
+#: includes/class-digitizer-cookie-consent-admin.php:939
 msgid "Percentage of the available width, capped by the max width above."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:908
+#: includes/class-digitizer-cookie-consent-admin.php:943
 msgid "Max width on mobile (px)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:911
+#: includes/class-digitizer-cookie-consent-admin.php:946
 msgid "Applied below 640px wide, so the banner can be a narrow card on desktop and full-width on phones."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:915
+#: includes/class-digitizer-cookie-consent-admin.php:950
 msgid "Width on mobile (%)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:919
+#: includes/class-digitizer-cookie-consent-admin.php:954
 msgid "Full-width bar on mobile"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:922
+#: includes/class-digitizer-cookie-consent-admin.php:957
 msgid "Below 640px wide: flush with the edge of the screen, full width, with no margin and no rounded corners. Overrides the two mobile widths above. Not used by the centered position."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:926
+#: includes/class-digitizer-cookie-consent-admin.php:961
 msgid "Round the inner edge of the bar"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:929
+#: includes/class-digitizer-cookie-consent-admin.php:964
 msgid "With the full-width bar: the corners facing the page keep the corner radius below (the top corners of a bottom bar). The edge against the screen stays square."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:933 includes/class-digitizer-cookie-consent-admin.php:1230
+#: includes/class-digitizer-cookie-consent-admin.php:968 includes/class-digitizer-cookie-consent-admin.php:1265
 msgid "Corner radius (px)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:937
+#: includes/class-digitizer-cookie-consent-admin.php:972
 msgid "Inner padding (px)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:941
+#: includes/class-digitizer-cookie-consent-admin.php:976
 msgid "Border width (px)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:945 includes/class-digitizer-cookie-consent-admin.php:1248
+#: includes/class-digitizer-cookie-consent-admin.php:980 includes/class-digitizer-cookie-consent-admin.php:1283
 msgid "Border color"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:949
+#: includes/class-digitizer-cookie-consent-admin.php:984
 msgid "Border style"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:953
+#: includes/class-digitizer-cookie-consent-admin.php:988
 msgid "Solid"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:954
+#: includes/class-digitizer-cookie-consent-admin.php:989
 msgid "Dashed"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:955
+#: includes/class-digitizer-cookie-consent-admin.php:990
 msgid "Dotted"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:956
+#: includes/class-digitizer-cookie-consent-admin.php:991
 msgid "Double"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:968
+#: includes/class-digitizer-cookie-consent-admin.php:1003
 msgid "Close button (X)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:971
+#: includes/class-digitizer-cookie-consent-admin.php:1006
 msgid "Show close button"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:974
+#: includes/class-digitizer-cookie-consent-admin.php:1009
 msgid "Closing with X counts as rejecting non-essential cookies."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:978
+#: includes/class-digitizer-cookie-consent-admin.php:1013
 msgid "X size (px)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:981
+#: includes/class-digitizer-cookie-consent-admin.php:1016
 msgid "With the icon, its width and height."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:985
+#: includes/class-digitizer-cookie-consent-admin.php:1020
 msgid "X shape"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:988
+#: includes/class-digitizer-cookie-consent-admin.php:1023
 msgid "Character (in the banner font)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:989
+#: includes/class-digitizer-cookie-consent-admin.php:1024
 msgid "Icon (bold, the same in every font)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:994
+#: includes/class-digitizer-cookie-consent-admin.php:1029
 msgid "X opacity (0.1-1)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:997
+#: includes/class-digitizer-cookie-consent-admin.php:1032
 msgid "1 = full strength. On hover it is always shown in full."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1001
+#: includes/class-digitizer-cookie-consent-admin.php:1036
 msgid "X color"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1004 includes/class-digitizer-cookie-consent-admin.php:1061 includes/class-digitizer-cookie-consent-admin.php:1116
+#: includes/class-digitizer-cookie-consent-admin.php:1039 includes/class-digitizer-cookie-consent-admin.php:1096 includes/class-digitizer-cookie-consent-admin.php:1151
 msgid "Empty = use the base text color."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1008
+#: includes/class-digitizer-cookie-consent-admin.php:1043
 msgid "X background color"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1011
+#: includes/class-digitizer-cookie-consent-admin.php:1046
 msgid "Empty = transparent. With a color, the button becomes a circle."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1026
+#: includes/class-digitizer-cookie-consent-admin.php:1061
 msgid "300 - Light"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1027
+#: includes/class-digitizer-cookie-consent-admin.php:1062
 msgid "400 - Regular"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1028
+#: includes/class-digitizer-cookie-consent-admin.php:1063
 msgid "500 - Medium"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1029
+#: includes/class-digitizer-cookie-consent-admin.php:1064
 msgid "600 - Semi-bold"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1030
+#: includes/class-digitizer-cookie-consent-admin.php:1065
 msgid "700 - Bold"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1031
+#: includes/class-digitizer-cookie-consent-admin.php:1066
 msgid "800 - Extra-bold"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1032
+#: includes/class-digitizer-cookie-consent-admin.php:1067
 msgid "900 - Black"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1038
+#: includes/class-digitizer-cookie-consent-admin.php:1073
 msgid "Start (right in RTL, left in LTR)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1040
+#: includes/class-digitizer-cookie-consent-admin.php:1075
 msgid "End (left in RTL, right in LTR)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1041
+#: includes/class-digitizer-cookie-consent-admin.php:1076
 msgid "Justify"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1046
+#: includes/class-digitizer-cookie-consent-admin.php:1081
 msgid "Alignment uses logical values, so \"Start\" is right for Hebrew/Arabic pages and left for English pages - the same setting fits every language."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1048
+#: includes/class-digitizer-cookie-consent-admin.php:1083
 msgid "Title"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1051
+#: includes/class-digitizer-cookie-consent-admin.php:1086
 msgid "Show title"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1054
+#: includes/class-digitizer-cookie-consent-admin.php:1089
 msgid "Off hides the title from sight. Screen readers still read it, because it is the name of the banner's dialog."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1058
+#: includes/class-digitizer-cookie-consent-admin.php:1093
 msgid "Title color"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1065 includes/class-digitizer-cookie-consent-admin.php:1120 includes/class-digitizer-cookie-consent-admin.php:1167
+#: includes/class-digitizer-cookie-consent-admin.php:1100 includes/class-digitizer-cookie-consent-admin.php:1155 includes/class-digitizer-cookie-consent-admin.php:1202
 msgid "Font size"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1069 includes/class-digitizer-cookie-consent-admin.php:1124
+#: includes/class-digitizer-cookie-consent-admin.php:1104 includes/class-digitizer-cookie-consent-admin.php:1159
 msgid "Alignment"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1079 includes/class-digitizer-cookie-consent-admin.php:1171
+#: includes/class-digitizer-cookie-consent-admin.php:1114 includes/class-digitizer-cookie-consent-admin.php:1206
 msgid "Font weight"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1089
+#: includes/class-digitizer-cookie-consent-admin.php:1124
 msgid "Space below (px)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1093 includes/class-digitizer-cookie-consent-admin.php:1134
+#: includes/class-digitizer-cookie-consent-admin.php:1128 includes/class-digitizer-cookie-consent-admin.php:1169
 msgid "Text shadow"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1097 includes/class-digitizer-cookie-consent-admin.php:1138
+#: includes/class-digitizer-cookie-consent-admin.php:1132 includes/class-digitizer-cookie-consent-admin.php:1173
 msgid "Shadow color"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1101 includes/class-digitizer-cookie-consent-admin.php:1142
+#: includes/class-digitizer-cookie-consent-admin.php:1136 includes/class-digitizer-cookie-consent-admin.php:1177
 msgid "Blur (px)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1105 includes/class-digitizer-cookie-consent-admin.php:1146
+#: includes/class-digitizer-cookie-consent-admin.php:1140 includes/class-digitizer-cookie-consent-admin.php:1181
 msgid "Vertical offset (px)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1110
+#: includes/class-digitizer-cookie-consent-admin.php:1145
 msgid "Content"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1113 includes/class-digitizer-cookie-consent-admin.php:1226 includes/class-digitizer-cookie-consent-admin.php:1379
+#: includes/class-digitizer-cookie-consent-admin.php:1148 includes/class-digitizer-cookie-consent-admin.php:1261 includes/class-digitizer-cookie-consent-admin.php:1410
 msgid "Text color"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1155
+#: includes/class-digitizer-cookie-consent-admin.php:1190
 msgid "Button Design"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1157
+#: includes/class-digitizer-cookie-consent-admin.php:1192
 msgid "All buttons"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1160
+#: includes/class-digitizer-cookie-consent-admin.php:1195
 msgid "Height (px)"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1163
+#: includes/class-digitizer-cookie-consent-admin.php:1198
 msgid "0 = as tall as the text and padding make it."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1181
+#: includes/class-digitizer-cookie-consent-admin.php:1216
 msgid "Fill the row"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1184
+#: includes/class-digitizer-cookie-consent-admin.php:1219
 msgid "On desktop the buttons share the width of the row equally. Off sizes each one to its text. On mobile they are always full width, one under another."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1195 includes/class-digitizer-cookie-consent-admin.php:1204
+#: includes/class-digitizer-cookie-consent-admin.php:1230 includes/class-digitizer-cookie-consent-admin.php:1239
 msgid "Show button"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1235
+#: includes/class-digitizer-cookie-consent-admin.php:1270
 msgid "Hover background color"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1241
+#: includes/class-digitizer-cookie-consent-admin.php:1276
 msgid "Border"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1244
+#: includes/class-digitizer-cookie-consent-admin.php:1279
 msgid "Adds a thin border in the text color."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1251
+#: includes/class-digitizer-cookie-consent-admin.php:1286
 msgid "Empty = the button's text color."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1261
+#: includes/class-digitizer-cookie-consent-admin.php:1296
 msgid "Cookie Categories"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1262
-msgid "Each category shows a separate toggle on the advanced-preferences screen. Scripts from the \"Scripts\" tab load only after the visitor consents to the matching category. Category names and descriptions are edited per language on the \"Texts\" tab."
+#: includes/class-digitizer-cookie-consent-admin.php:1297
+msgid "Each category shows a separate toggle on the advanced-preferences screen. Scripts tagged with a category (see the \"Scripts\" tab) run only after the visitor consents to it. Category names and descriptions are edited per language on the \"Texts\" tab."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1266
+#: includes/class-digitizer-cookie-consent-admin.php:1301
 msgid "Essential cookies"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1267
+#: includes/class-digitizer-cookie-consent-admin.php:1302
 msgid "Always active - cannot be disabled."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1270 includes/class-digitizer-cookie-consent-admin.php:1289
+#: includes/class-digitizer-cookie-consent-admin.php:1305 includes/class-digitizer-cookie-consent-admin.php:1324
 msgid "Functional cookies"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1274 includes/class-digitizer-cookie-consent-admin.php:1290
+#: includes/class-digitizer-cookie-consent-admin.php:1309 includes/class-digitizer-cookie-consent-admin.php:1325
 msgid "Analytics cookies"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1278 includes/class-digitizer-cookie-consent-admin.php:1291
+#: includes/class-digitizer-cookie-consent-admin.php:1313 includes/class-digitizer-cookie-consent-admin.php:1326
 msgid "Marketing cookies"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1283
+#: includes/class-digitizer-cookie-consent-admin.php:1318
 msgid "Cookies to delete when a category is denied"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1284
+#: includes/class-digitizer-cookie-consent-admin.php:1319
 msgid "When a visitor refuses or withdraws a category, these cookies, and the localStorage and sessionStorage keys with the same names, are deleted from the browser, and again on every page while the category stays denied. One name per line or separated by commas; * matches anything, for example _ga_*."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1285
+#: includes/class-digitizer-cookie-consent-admin.php:1320
 msgid "Only this site's own cookies that scripts can read can be deleted: cookies set by other domains, such as .linkedin.com or .doubleclick.net, and cookies marked HttpOnly are out of a page's reach. Analytics and advertising tags do not use HttpOnly. WordPress's login, settings and comment cookies, WooCommerce's cart, session and store-notice data, and the banner's own are never deleted. WooCommerce's order attribution cookies (sbjs_*) are tracking, and can be listed under marketing."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1306
-msgid "Scripts loaded after consent"
+#: includes/class-digitizer-cookie-consent-admin.php:1341
+msgid "Functional"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1308
-msgid "How does it work?"
+#: includes/class-digitizer-cookie-consent-admin.php:1342
+msgid "Analytics"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1309
-msgid "Paste the full HTML snippets here (Google Analytics, Facebook Pixel, GTM...). They are injected into the site <head> only after the visitor consents to the matching category."
-msgstr ""
-
-#: includes/class-digitizer-cookie-consent-admin.php:1310
-msgid "Paste the complete code including the <script> tags."
-msgstr ""
-
-#: includes/class-digitizer-cookie-consent-admin.php:1313
-msgid "Functional scripts"
-msgstr ""
-
-#: includes/class-digitizer-cookie-consent-admin.php:1322
-msgid "Analytics scripts"
-msgstr ""
-
-#: includes/class-digitizer-cookie-consent-admin.php:1327
-msgid "For example: Google Analytics 4, Google Tag Manager, Hotjar, Clarity."
-msgstr ""
-
-#: includes/class-digitizer-cookie-consent-admin.php:1332
-msgid "Marketing scripts"
-msgstr ""
-
-#: includes/class-digitizer-cookie-consent-admin.php:1337
-msgid "For example: Facebook Pixel, Google Ads, TikTok Pixel, LinkedIn Insight."
+#: includes/class-digitizer-cookie-consent-admin.php:1343
+msgid "Marketing"
 msgstr ""
 
 #: includes/class-digitizer-cookie-consent-admin.php:1346
+msgid "Scripts that wait for consent"
+msgstr ""
+
+#: includes/class-digitizer-cookie-consent-admin.php:1348
+msgid "The plugin does not store or add code. Keep your tracking scripts where they are now (your theme, a header plugin or Google Tag Manager), and change the opening tag of each so it waits for the visitor's consent:"
+msgstr ""
+
+#: includes/class-digitizer-cookie-consent-admin.php:1350
+msgid "A tagged script does not run until the visitor allows its category; then it runs as written. For an external file, keep its src attribute. To run it as a module, add data-dpt-cb-type=\"module\"."
+msgstr ""
+
+#: includes/class-digitizer-cookie-consent-admin.php:1351
+msgid "With Google tags, you can instead turn on Consent Mode v2 in General."
+msgstr ""
+
+#: includes/class-digitizer-cookie-consent-admin.php:1377
 msgid "Floating \"Manage Cookies\" Button"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1347
+#: includes/class-digitizer-cookie-consent-admin.php:1378
 msgid "A small button in the corner of the site that lets visitors reopen the banner and change their preferences at any time. Its text and accessibility label are edited per language on the \"Texts\" tab."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1349
+#: includes/class-digitizer-cookie-consent-admin.php:1380
 msgid "Basics"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1352
+#: includes/class-digitizer-cookie-consent-admin.php:1383
 msgid "Enable button"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1356
+#: includes/class-digitizer-cookie-consent-admin.php:1387
 msgid "Anchor corner"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1362
+#: includes/class-digitizer-cookie-consent-admin.php:1393
 msgid "Top-right corner"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1363
+#: includes/class-digitizer-cookie-consent-admin.php:1394
 msgid "Top-left corner"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1371
+#: includes/class-digitizer-cookie-consent-admin.php:1402
 msgid "The final position is the corner plus the offsets below."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1384
+#: includes/class-digitizer-cookie-consent-admin.php:1415
 msgid "Desktop position"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1385
+#: includes/class-digitizer-cookie-consent-admin.php:1416
 msgid "Offsets are measured from the chosen corner. For example, corner \"bottom-right\" with vertical offset 100 places the button 100px above the bottom - handy for avoiding WhatsApp/chat buttons."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1388 includes/class-digitizer-cookie-consent-admin.php:1408
+#: includes/class-digitizer-cookie-consent-admin.php:1419 includes/class-digitizer-cookie-consent-admin.php:1439
 msgid "Horizontal offset"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1392 includes/class-digitizer-cookie-consent-admin.php:1412
+#: includes/class-digitizer-cookie-consent-admin.php:1423 includes/class-digitizer-cookie-consent-admin.php:1443
 msgid "Vertical offset"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1395
+#: includes/class-digitizer-cookie-consent-admin.php:1426
 msgid "Tip: WhatsApp buttons usually sit 20-80px from the bottom. Use 90-100 to avoid collisions."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1399 includes/class-digitizer-cookie-consent-admin.php:1416
+#: includes/class-digitizer-cookie-consent-admin.php:1430 includes/class-digitizer-cookie-consent-admin.php:1447
 msgid "Button size"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1404
+#: includes/class-digitizer-cookie-consent-admin.php:1435
 msgid "Mobile position"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1405
+#: includes/class-digitizer-cookie-consent-admin.php:1436
 msgid "Separate values for screens up to 640px wide."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1500
+#: includes/class-digitizer-cookie-consent-admin.php:1531
 msgid "Preview"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1501
+#: includes/class-digitizer-cookie-consent-admin.php:1532
 msgid "Updates after saving."
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-admin.php:1529
+#: includes/class-digitizer-cookie-consent-admin.php:1560
 msgid "View banner on the site"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-frontend.php:1233
+#: includes/class-digitizer-cookie-consent-frontend.php:1170
 msgid "Cookie consent by Digitizer"
 msgstr ""
 

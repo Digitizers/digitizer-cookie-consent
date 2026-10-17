@@ -16,6 +16,7 @@ if ( ! function_exists( 'get_current_screen' ) ) { function get_current_screen()
 require_once dirname( __DIR__ ) . '/includes/class-digitizer-cookie-consent-settings.php';
 require_once dirname( __DIR__ ) . '/includes/class-digitizer-cookie-consent-frontend.php';
 require_once dirname( __DIR__ ) . '/includes/class-digitizer-cookie-consent-admin.php';
+require_once dirname( __DIR__ ) . '/includes/class-digitizer-cookie-consent-core.php';
 
 $GLOBALS['dpt_stub_no_user'] = false;
 $GLOBALS['dpt_stub_filters'] = array();
@@ -45,7 +46,32 @@ foreach ( array( '.dpt-layout', '.dpt-panel', '.dpt-form', '.dpt-actions', '.dpt
 	dpt_test_ok( false !== strpos( $css, $sel ), "admin.css carries $sel" );
 }
 
-/* The first-save notice: for managers, on Plugins and Dashboard, until saved. */
+/* No code fields anywhere: the Scripts tab explains tagging instead. */
+$tab = new ReflectionMethod( 'Digitizer_Cookie_Consent_Admin', 'tab_scripts' );
+if ( PHP_VERSION_ID < 80100 ) { $tab->setAccessible( true ); }
+ob_start(); $tab->invoke( $admin, Digitizer_Cookie_Consent_Settings::all() ); $scripts_tab = (string) ob_get_clean();
+dpt_test_ok( false === strpos( $scripts_tab, '<textarea' ) && false !== strpos( $scripts_tab, 'data-dpt-cb-category=&quot;analytics&quot;' ), 'the Scripts tab has no code field, and shows how to tag a script' );
+$src = (string) file_get_contents( dirname( __DIR__ ) . '/includes/class-digitizer-cookie-consent-admin.php' );
+dpt_test_ok( false === strpos( $src, 'scripts_functional' ) && false === strpos( $src, 'block_scripts' ) && false === stripos( $src, '<script' ), 'the screen has no snippet fields, and no literal script tag' );
+
+/* A site that moved from Digitizer Pro Tools with pasted snippets: shown them, read-only, until it says they are moved. */
+$moved = function () use ( $admin ) { ob_start(); $admin->moved_scripts_notice(); return (string) ob_get_clean(); };
+$GLOBALS['dpt_stub_options'] = array(
+	'digitizer_cookie_consent' => array( 'saved' => '1', 'scripts_moved' => '1' ),
+	'dpt_cookie_banner'        => array( 'scripts_analytics' => '<script>gtag("config","G-X");</script>' ),
+);
+$GLOBALS['dpt_stub_screen'] = (object) array( 'id' => 'settings_page_digitizer-cookie-consent' );
+$html = $moved();
+dpt_test_ok( false !== strpos( $html, 'readonly' ) && false !== strpos( $html, '&lt;script&gt;gtag(&quot;config&quot;,&quot;G-X&quot;);&lt;/script&gt;' ), 'the snippets are shown escaped, in a read-only box' );
+dpt_test_ok( false !== strpos( $html, 'digitizer_cc_scripts_moved' ) && false !== strpos( $html, '_wpnonce' ), 'with a nonce\'d "I moved them" action' );
+$GLOBALS['dpt_stub_screen'] = (object) array( 'id' => 'dashboard' );
+dpt_test_eq( $moved(), '', 'not on the Dashboard' );
+$GLOBALS['dpt_stub_screen'] = (object) array( 'id' => 'settings_page_digitizer-cookie-consent' );
+$GLOBALS['dpt_stub_options']['digitizer_cookie_consent']['scripts_moved'] = '0';
+dpt_test_eq( $moved(), '', 'gone once marked as moved' );
+dpt_test_ok( dpt_stub_has_filter( 'admin_post_digitizer_cc_scripts_moved' ), 'the action is handled' );
+
+/* The first-save notice: for managers, on the Plugins screen only, until saved. */
 $notice = function () use ( $admin ) { ob_start(); $admin->first_save_notice(); return (string) ob_get_clean(); };
 $GLOBALS['dpt_stub_options'] = array( 'digitizer_cookie_consent' => array( 'saved' => '0' ) );
 $GLOBALS['dpt_stub_screen'] = (object) array( 'id' => 'plugins' );
@@ -53,6 +79,8 @@ dpt_test_ok( false !== strpos( $notice(), 'options-general.php?page=digitizer-co
 $GLOBALS['dpt_stub_screen'] = (object) array( 'id' => 'edit-post' );
 dpt_test_eq( $notice(), '', 'not on other screens' );
 $GLOBALS['dpt_stub_screen'] = (object) array( 'id' => 'dashboard' );
+dpt_test_eq( $notice(), '', 'nor on the Dashboard (Guideline 11)' );
+$GLOBALS['dpt_stub_screen'] = (object) array( 'id' => 'plugins' );
 $GLOBALS['dpt_stub_no_user'] = true;
 dpt_test_eq( $notice(), '', 'not to a user who cannot manage options' );
 $GLOBALS['dpt_stub_no_user'] = false;

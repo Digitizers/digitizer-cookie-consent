@@ -154,57 +154,96 @@
         log('consent saved', consent);
     }
 
-    /* ============== Script injection (cache-proof) ==============
-     * With script blocking on, consented snippets are injected ONLY here,
-     * based on this visitor's own consent. The server never bakes them into
-     * the HTML, because full-page caches may serve that HTML to visitors
-     * who did not consent.
+    /* ============== Scripts that wait for consent ==============
+     * The plugin stores and prints no code. A site tags its own scripts
+     *   script type="text/plain" data-dpt-cb-category="analytics"
+     * - inert as written, and in a cached page too - and they are run here
+     * once this visitor allows that category: each is replaced by a real
+     * script with the same attributes and content. data-dpt-cb-type sets
+     * the type it runs as (for example "module").
      */
 
     var injectedCats = { functional: false, analytics: false, marketing: false };
 
-    // Insert admin-provided HTML so its <script> tags actually execute
-    // (nodes added via innerHTML never run). Nodes are processed through a
-    // sequential queue: an external <script src> must finish loading before
-    // the next node runs, so snippets like "load library + inline init"
-    // keep working exactly like they do when parsed from static HTML.
-    var injectQueue = [];
-    var injectWaiting = false;
+    // In page order, one at a time: an external script must finish loading
+    // before the next runs, so "library, then inline init" keeps working as
+    // it does in plain HTML.
+    var activateQueue = [];
+    var activateWaiting = false;
 
-    function processInjectQueue() {
-        while (!injectWaiting && injectQueue.length) {
-            var node = injectQueue.shift();
-            var target = document.head || document.body || document.documentElement;
-            if (node.nodeName === 'SCRIPT') {
-                var s = document.createElement('script');
-                for (var i = 0; i < node.attributes.length; i++) {
-                    s.setAttribute(node.attributes[i].name, node.attributes[i].value);
-                }
-                s.text = node.text || node.textContent || '';
-                if (s.src) {
-                    injectWaiting = true;
-                    var proceed = function () {
-                        injectWaiting = false;
-                        processInjectQueue();
-                    };
-                    s.onload = proceed;
-                    s.onerror = proceed;
-                    target.appendChild(s);
-                    return; // resume from onload/onerror
-                }
-                target.appendChild(s);
-            } else {
-                target.appendChild(node);
+    function processActivateQueue() {
+        while (!activateWaiting && activateQueue.length) {
+            var node = activateQueue.shift();
+            var s = document.createElement('script');
+            for (var i = 0; i < node.attributes.length; i++) {
+                var name = node.attributes[i].name;
+                if (name === 'type' || name === 'data-dpt-cb-category') continue;
+                if (name === 'data-dpt-cb-type') { s.setAttribute('type', node.attributes[i].value); continue; }
+                s.setAttribute(name, node.attributes[i].value);
             }
+            // A connected script's nonce attribute reads empty (browsers hide
+            // it); the property still has it, and CSP needs it.
+            if (node.nonce) s.nonce = node.nonce;
+            s.text = node.text || node.textContent || '';
+            var external = !!s.getAttribute('src');
+            if (external) {
+                activateWaiting = true;
+                // Listeners, not onload/onerror: the script's own handlers,
+                // copied from its attributes, still run.
+                var resumed = false;
+                var resume = function () {
+                    if (resumed) return;
+                    resumed = true;
+                    activateWaiting = false;
+                    processActivateQueue();
+                };
+                s.addEventListener('load', resume);
+                s.addEventListener('error', resume);
+            }
+            if (node.parentNode) {
+                node.parentNode.replaceChild(s, node);
+            } else {
+                (document.head || document.documentElement).appendChild(s);
+            }
+            if (external) return; // resumes from onload/onerror
         }
     }
 
-    function appendExecutable(html) {
-        var tpl = document.createElement('template');
-        tpl.innerHTML = html;
-        var nodes = tpl.content ? tpl.content.childNodes : tpl.childNodes;
-        injectQueue = injectQueue.concat(Array.prototype.slice.call(nodes));
-        processInjectQueue();
+    function activateTaggedScripts(consent) {
+        if (!consent) return;
+        var nodes;
+        try {
+            nodes = document.querySelectorAll('script[type="text/plain"][data-dpt-cb-category]');
+        } catch (e) { return; }
+        Array.prototype.forEach.call(nodes, function (node) {
+            var cat = node.getAttribute('data-dpt-cb-category');
+            if (node.dptCbQueued || !granted(consent, cat)) return;
+            node.dptCbQueued = true;
+            injectedCats[cat] = true;
+            activateQueue.push(node);
+            log('activating a tagged script: ' + cat);
+        });
+        processActivateQueue();
+    }
+
+    // A tagged script added after load - by Tag Manager or a lazy loader -
+    // runs too, under the stored choice. One observer, from init on.
+    var tagWatcher = null;
+    function watchTaggedScripts() {
+        if (tagWatcher || typeof MutationObserver !== 'function') return;
+        tagWatcher = new MutationObserver(function (mutations) {
+            for (var i = 0; i < mutations.length; i++) {
+                var added = mutations[i].addedNodes;
+                for (var j = 0; j < added.length; j++) {
+                    var n = added[j];
+                    if (n.nodeType === 1 && (n.matches && n.matches('script[data-dpt-cb-category]') || n.querySelector && n.querySelector('script[data-dpt-cb-category]'))) {
+                        activateTaggedScripts(readConsent());
+                        return;
+                    }
+                }
+            }
+        });
+        try { tagWatcher.observe(document.documentElement, { childList: true, subtree: true }); } catch (e) { tagWatcher = null; }
     }
 
     // A category counts only if the visitor allowed it and it is still
@@ -275,24 +314,6 @@
     function purgeDenied(consent) {
         if (!consent || typeof window.digitizerCookieConsentPurge !== 'function') return;
         try { window.digitizerCookieConsentPurge(consent); } catch (e) { log('purge failed', e && e.message); }
-    }
-
-    function injectConsentedScripts(consent) {
-        if (!config.blockScripts || !consent) return;
-        var scripts = config.scripts || {};
-        ['functional', 'analytics', 'marketing'].forEach(function (cat) {
-            if (injectedCats[cat]) return;          // already injected on this page
-            if (!consent[cat]) return;              // no consent for this category
-            var html = scripts[cat];
-            if (!html || !String(html).replace(/\s+/g, '')) return;
-            injectedCats[cat] = true;
-            try {
-                appendExecutable(String(html));
-                log('injected scripts: ' + cat);
-            } catch (e) {
-                log('script injection failed: ' + cat, e.message);
-            }
-        });
     }
 
     /* ============== Debug Panel ============== */
@@ -403,14 +424,15 @@
         var preResolved = document.documentElement.getAttribute('data-dpt-cb-resolved') === '1';
         var shouldShow  = (!existing && !preResolved) || forceOpen;
 
-        // Consented snippets are client-injected on every page load (the
-        // server never bakes them into cacheable HTML).
+        // Tagged scripts run here, on every page load, from this visitor's
+        // own choice - including ones added later.
+        watchTaggedScripts();
         if (existing) {
             // Again here, in case the head precheck could not read the choice
             // (a store it rejected that readConsent() repaired). The same
             // values, so a second update changes nothing when it did.
             signalConsentMode(existing);
-            injectConsentedScripts(existing);
+            activateTaggedScripts(existing);
         }
 
         // The precheck may have resolved from a stale-version consent that
@@ -531,7 +553,7 @@
             // new state on its first hit.
             signalConsentMode(consent);
             signalWpConsentApi(consent);
-            injectConsentedScripts(consent);
+            activateTaggedScripts(consent);
             try { document.documentElement.setAttribute('data-dpt-cb-resolved', '1'); } catch(e) {}
             hideBannerInstant();
             returnFocus();

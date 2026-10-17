@@ -25,17 +25,22 @@ Digitizer_Cookie_Consent_Core::activate( false );
 $o = get_option( 'digitizer_cookie_consent' );
 dpt_test_eq( array( $o['languages'], $o['default_lang'], $o['texts']['fr']['title'] ), array( array( 'he', 'en', 'fr' ), 'fr', 'Nous utilisons des cookies' ), 'an added language, its default status and its texts survive the import' );
 
-// Stored snippets survive an activation by a user without unfiltered_html.
-$GLOBALS['dpt_stub_no_user'] = true; // current_user_can() answers false for everything, unfiltered_html included
-$GLOBALS['dpt_stub_options'] = array( 'dpt_cookie_banner' => array( 'scripts_analytics' => '<script>gtag("config","G-X");</script>' ) );
-Digitizer_Cookie_Consent_Core::activate( false );
-dpt_test_eq( get_option( 'digitizer_cookie_consent' )['scripts_analytics'], '<script>gtag("config","G-X");</script>', 'the site\'s tracking snippet comes across intact, whoever activates' );
-$GLOBALS['dpt_stub_no_user'] = false;
-// The whole option, not a subset: a reset switch, category or lifetime would change tracking or re-ask visitors.
-$GLOBALS['dpt_stub_options'] = array( 'dpt_cookie_banner' => array( 'block_scripts' => '0', 'cat_marketing_enabled' => '0', 'consent_mode' => '1', 'consent_days' => '365', 'bg_color' => '#123456', 'policy_url' => 'https://example.test/p/' ) );
+// The plugin stores no code: the module's pasted snippets stay in its own option, and the site is told to move them.
+$GLOBALS['dpt_stub_options'] = array( 'dpt_cookie_banner' => array( 'scripts_analytics' => '<script>gtag("config","G-X");</script>', 'block_scripts' => '1' ) );
 Digitizer_Cookie_Consent_Core::activate( false );
 $o = get_option( 'digitizer_cookie_consent' );
-dpt_test_eq( array( $o['block_scripts'], $o['cat_marketing_enabled'], $o['consent_mode'], $o['consent_days'], $o['bg_color'], $o['policy_url'] ), array( '0', '0', '1', '365', '#123456', 'https://example.test/p/' ), 'every setting comes across: switches, categories, Consent Mode, lifetime, design, policy link' );
+dpt_test_ok( ! isset( $o['scripts_analytics'] ) && ! isset( $o['block_scripts'] ), 'no snippet, and no switch for one, is imported' );
+dpt_test_eq( $o['scripts_moved'], '1', 'a site that had snippets is flagged, so the settings screen can show them and how to tag them' );
+$GLOBALS['dpt_stub_options'] = array( 'dpt_cookie_banner' => array( 'scripts_analytics' => '  ' ) );
+Digitizer_Cookie_Consent_Core::activate( false );
+dpt_test_eq( get_option( 'digitizer_cookie_consent' )['scripts_moved'], '0', 'no snippets, no flag' );
+$c = Digitizer_Cookie_Consent_Settings::sanitize( array( 'scripts_marketing' => '<script>x()</script>', 'made_up' => 'x' ), Digitizer_Cookie_Consent_Settings::defaults() );
+dpt_test_ok( ! isset( $c['scripts_marketing'] ) && ! isset( $c['made_up'] ), 'sanitize() keeps only settings the plugin has' );
+// The whole option, not a subset: a reset switch, category or lifetime would change tracking or re-ask visitors.
+$GLOBALS['dpt_stub_options'] = array( 'dpt_cookie_banner' => array( 'cat_marketing_enabled' => '0', 'consent_mode' => '1', 'consent_days' => '365', 'bg_color' => '#123456', 'policy_url' => 'https://example.test/p/' ) );
+Digitizer_Cookie_Consent_Core::activate( false );
+$o = get_option( 'digitizer_cookie_consent' );
+dpt_test_eq( array( $o['cat_marketing_enabled'], $o['consent_mode'], $o['consent_days'], $o['bg_color'], $o['policy_url'] ), array( '0', '1', '365', '#123456', 'https://example.test/p/' ), 'every setting comes across: switches, categories, Consent Mode, lifetime, design, policy link' );
 dpt_test_ok( isset( $GLOBALS['dpt_stub_options']['dpt_cookie_banner'] ), 'the module\'s option is left alone' );
 
 /* Text read from the database is not slashed: a backslash in it survives. */
