@@ -54,4 +54,29 @@ if ( '' !== $node && preg_match( '/(    function getCookieDomain\(\) \{.*?\n    
 } else {
 	dpt_test_ok( false, 'getCookieDomain() found and node available' );
 }
+
+/* Switching where the cookie lives leaves no same-named copy behind to win over the new choice. */
+if ( '' !== $node && preg_match( '/(    function getCookieDomain\(\) \{.*?\n    function getCookie\(name\) \{.*?\n    \})/s', $js, $fns ) ) {
+	$jar_run = function ( $domain, $jar ) use ( $node, $fns ) {
+		$file = tempnam( sys_get_temp_dir(), 'dcc' ) . '.js';
+		$harness = 'var jar=' . json_encode( $jar ) . ';function log(){}
+var location={hostname:"shop.example.co.il",protocol:"https:"};var config={cookieDomain:' . json_encode( $domain ) . '};
+var document={get cookie(){return jar.map(function(c){return c[0]+"="+c[2];}).join("; ");},
+set cookie(s){var p=s.split(";").map(function(x){return x.trim();});var n=p[0].split("=")[0],v=p[0].slice(n.length+1),d="",exp=false;
+p.slice(1).forEach(function(x){var kv=x.split("=");var k=kv[0].toLowerCase();if(k==="domain")d=kv[1].charAt(0)==="."?kv[1]:"."+kv[1];if(k==="expires"&&new Date(kv[1])<new Date())exp=true;if(k==="max-age"&&kv[1]==="0")exp=true;});
+if(d&&!("."+location.hostname).endsWith(d))return;if(d===".co.il")return;
+jar=jar.filter(function(c){return !(c[0]===n&&c[1]===d);});if(!exp)jar.push([n,d,v]);}};
+' . $fns[1] . '
+setCookie("dpt_consent","new",180);process.stdout.write(JSON.stringify(jar.map(function(c){return c[0]+"@"+(c[1]||"host")+"="+c[2];}).sort()));';
+		file_put_contents( $file, $harness );
+		$out = json_decode( (string) shell_exec( escapeshellarg( $node ) . ' ' . escapeshellarg( $file ) ), true );
+		unlink( $file );
+		return $out;
+	};
+	dpt_test_eq( $jar_run( '', array( array( 'dpt_consent', '.example.co.il', 'old' ) ) ), array( 'dpt_consent@host=new' ), 'host-only: the parent-domain copy from before is expired' );
+	dpt_test_eq( $jar_run( null, array( array( 'dpt_consent', '', 'old' ) ) ), array( 'dpt_consent@.example.co.il=new' ), 'parent domain: a host-only copy from before is expired' );
+	dpt_test_eq( $jar_run( null, array( array( 'theme', '.example.co.il', 'x' ) ) ), array( 'dpt_consent@.example.co.il=new', 'theme@.example.co.il=x' ), 'other cookies are untouched' );
+} else {
+	dpt_test_ok( false, 'setCookie() found and node available' );
+}
 exit( dpt_test_summary() > 0 ? 1 : 0 );

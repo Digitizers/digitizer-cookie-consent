@@ -54,6 +54,17 @@
                 '; path=/' +
                 '; samesite=lax' + secure;
             var domain = getCookieDomain();
+            // A copy of the same name elsewhere - on the parent domain from
+            // before a switch to host-only, or host-only from before the
+            // reverse - is sent alongside, and the server and getCookie() may
+            // read it instead. Expire every other copy first.
+            var gone = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; samesite=lax' + secure;
+            var labels = String(location.hostname || '').split('.');
+            if (domain) document.cookie = gone;
+            for (var i = 0; i < labels.length - 1; i++) {
+                var parent = '.' + labels.slice(i).join('.');
+                if (parent !== domain) document.cookie = gone + '; domain=' + parent;
+            }
             if (domain) {
                 document.cookie = base + '; domain=' + domain;
             }
