@@ -21,6 +21,9 @@
     /* ============== Storage ============== */
 
     function getCookieDomain() {
+        // The digitizer_cookie_consent_cookie_domain filter: '' is host-only,
+        // a domain is used as given, null (the default) guesses the parent.
+        if (typeof config.cookieDomain === 'string') return config.cookieDomain;
         var host = location.hostname;
         if (!host || host === 'localhost' || /^\d+\.\d+\.\d+\.\d+$/.test(host)) return '';
         var parts = host.split('.');
@@ -60,7 +63,9 @@
             // is not in our short list) the browser silently rejects it -
             // fall back to a host-only cookie so the server can still read
             // the consent.
-            if (getCookie(name) !== value) {
+            if (!domain) {
+                document.cookie = base;
+            } else if (getCookie(name) !== value) {
                 document.cookie = base;
                 log('cookie domain write not verified, host-only fallback', domain);
             }

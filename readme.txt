@@ -72,6 +72,10 @@ Only the site's own cookies that scripts can read. Cookies set on other domains 
 
 Link to #dpt-cookie-settings, give any element the class dpt-cb-open, or use the [dpt_cookie_settings] shortcode.
 
+= Does a choice carry over to my other subdomains? =
+
+Yes, by default: the choice is stored on the parent domain, so www, the bare domain and the site's other subdomains share it. If sibling subdomains are separate sites, keep the choice on each host with `add_filter( 'digitizer_cookie_consent_cookie_domain', '__return_empty_string' );`, or return the domain to use.
+
 == Screenshots ==
 
 1. The banner in Hebrew, in the corner of the page.

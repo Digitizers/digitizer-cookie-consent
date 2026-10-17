@@ -24,4 +24,34 @@ dpt_test_ok( false === strpos( $src, 'onclick=' ), 'the floating button has no i
 $GLOBALS['dpt_stub_inline_styles'] = array();
 $f->enqueue();
 dpt_test_ok( isset( $GLOBALS['dpt_stub_inline_styles']['digitizer-cookie-consent'] ) && false !== strpos( implode( '', $GLOBALS['dpt_stub_inline_styles']['digitizer-cookie-consent'] ), '#dpt-cb-banner .dpt-cb-box' ), 'the design CSS is an inline style on the plugin\'s stylesheet' );
+
+/* The consent cookie's domain: the parent domain by default, host-only or explicit through a filter. */
+$cfg = function () use ( $f ) { $f->enqueue(); return $GLOBALS['dpt_stub_localized']['digitizer-cookie-consent'][1]; };
+dpt_test_ok( array_key_exists( 'cookieDomain', $cfg() ) && null === $cfg()['cookieDomain'], 'by default frontend.js picks the parent domain itself (cookieDomain null)' );
+add_filter( 'digitizer_cookie_consent_cookie_domain', function () { return ''; } );
+dpt_test_eq( $cfg()['cookieDomain'], '', 'the filter returning \'\' makes the cookie host-only' );
+$GLOBALS['dpt_stub_filters'] = array();
+add_filter( 'digitizer_cookie_consent_cookie_domain', function () { return ' .Example.com '; } );
+dpt_test_eq( $cfg()['cookieDomain'], '.example.com', 'an explicit domain is trimmed and lower-cased' );
+$GLOBALS['dpt_stub_filters'] = array();
+add_filter( 'digitizer_cookie_consent_cookie_domain', function () { return '.example.com"><x'; } );
+dpt_test_eq( $cfg()['cookieDomain'], null, 'anything that is not a domain name falls back to the default' );
+$GLOBALS['dpt_stub_filters'] = array();
+
+$node = trim( (string) shell_exec( 'command -v node 2>/dev/null' ) );
+$js   = (string) file_get_contents( dirname( __DIR__ ) . '/assets/js/frontend.js' );
+if ( '' !== $node && preg_match( '/(    function getCookieDomain\(\) \{.*?\n    \})/s', $js, $fn ) ) {
+	$run = function ( $domain ) use ( $node, $fn ) {
+		$file = tempnam( sys_get_temp_dir(), 'dcc' ) . '.js';
+		file_put_contents( $file, 'var location={hostname:"shop.example.co.il"};var config={cookieDomain:' . json_encode( $domain ) . '};' . $fn[1] . 'process.stdout.write(JSON.stringify(getCookieDomain()));' );
+		$out = json_decode( (string) shell_exec( escapeshellarg( $node ) . ' ' . escapeshellarg( $file ) ) );
+		unlink( $file );
+		return $out;
+	};
+	dpt_test_eq( $run( null ), '.example.co.il', 'frontend.js: no filter, the parent domain' );
+	dpt_test_eq( $run( '' ), '', 'frontend.js: host-only when the filter says so' );
+	dpt_test_eq( $run( '.example.co.il' ), '.example.co.il', 'frontend.js: an explicit domain is used as given' );
+} else {
+	dpt_test_ok( false, 'getCookieDomain() found and node available' );
+}
 exit( dpt_test_summary() > 0 ? 1 : 0 );

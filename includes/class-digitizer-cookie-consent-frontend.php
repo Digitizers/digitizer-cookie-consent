@@ -478,6 +478,30 @@ class Digitizer_Cookie_Consent_Frontend {
 		return true;
 	}
 
+	/**
+	 * Where the consent cookie is written. By default (null) frontend.js
+	 * writes it on the parent domain, so one choice covers www, the apex and
+	 * the site's other subdomains - as Digitizer Pro Tools always has. Sites
+	 * that are independent of their sibling subdomains return '' for a
+	 * host-only cookie, or name the domain themselves:
+	 *
+	 *   add_filter( 'digitizer_cookie_consent_cookie_domain', '__return_empty_string' );
+	 *
+	 * @return string|null
+	 */
+	public static function cookie_domain() {
+		$domain = apply_filters( 'digitizer_cookie_consent_cookie_domain', null );
+		if ( null === $domain ) {
+			return null;
+		}
+		$domain = strtolower( trim( (string) $domain ) );
+		if ( '' === $domain ) {
+			return '';
+		}
+		// Anything that is not a domain name falls back to the default.
+		return preg_match( '/^\.?[a-z0-9-]+(\.[a-z0-9-]+)+$/', $domain ) ? $domain : null;
+	}
+
 	public function enqueue() {
 		if ( ! $this->is_active() ) {
 			return;
@@ -531,6 +555,7 @@ class Digitizer_Cookie_Consent_Frontend {
 			'scripts'          => $scripts,
 			'openSelector'     => self::open_selector(),
 			'openHash'         => self::OPEN_HASH,
+			'cookieDomain'     => self::cookie_domain(),
 			'consentMode'      => '1' === $o['consent_mode'] && self::signals_possible( $o ) ? self::consent_mode_map() : null,
 			'wpConsentApi'     => '1' === $o['wp_consent_api'] && self::signals_possible( $o ) ? self::wp_consent_api_map() : null,
 			'cleanup'          => self::cleanup_patterns( $o ),
