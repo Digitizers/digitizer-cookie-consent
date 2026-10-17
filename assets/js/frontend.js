@@ -432,6 +432,7 @@
             document.documentElement.removeAttribute('data-dpt-cb-resolved');
             var delayMs = Math.max(0, (config.showDelay || 0) * 1000);
             var revealBanner = function () {
+                if (readConsent()) return;  // chosen early, through a link or the floating button
                 banner.classList.remove('dpt-cb-hidden');
                 if (overlay) overlay.classList.remove('dpt-cb-hidden');
                 banner.classList.add('dpt-cb-entering');

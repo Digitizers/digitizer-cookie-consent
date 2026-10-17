@@ -178,6 +178,10 @@ $finish_body = substr( $finish, 0, (int) strpos( $finish, "\n        }\n" ) );
 dpt_test_ok( 1 === preg_match( '/injectedCats\[cat\] && !consent\[cat\]/', $finish_body ) && false !== strpos( $finish_body, 'location.reload()' ), 'withdrawing a category whose snippet already runs on the page reloads it, so that code stops' );
 $settings_view = substr( $js, (int) strpos( $js, 'function showSettingsView' ), 1200 );
 dpt_test_ok( false !== strpos( $settings_view, '.focus(' ), 'opening the preferences view moves focus into it' );
+$reveal = substr( $js, (int) strpos( $js, 'var revealBanner = function' ), 300 );
+dpt_test_ok( 1 === preg_match( '/^var revealBanner = function \(\) \{\s*if \(readConsent\(\)\) return;/', $reveal ), 'a delayed reveal does not bring the banner back after the visitor already chose' );
+$css = (string) file_get_contents( dirname( __DIR__ ) . '/assets/css/frontend.css' );
+dpt_test_ok( 1 === preg_match( '/\.dpt-cb-toggle input:focus-visible \+ \.dpt-cb-toggle-slider\s*\{[^}]*outline:/', $css ), 'the focused category toggle shows a focus ring on its slider' );
 
 $GLOBALS['dpt_stub_options'][ Digitizer_Cookie_Consent_Settings::OPTION ] = array( 'cleanup_analytics' => '_ga', 'enabled' => '0' );
 ob_start();
