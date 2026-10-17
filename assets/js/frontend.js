@@ -489,6 +489,11 @@
             // Re-enable buttons in the settings view in case they were disabled.
             var btns = settingsView ? settingsView.querySelectorAll('[data-dpt-cb-action]') : [];
             for (var i = 0; i < btns.length; i++) btns[i].style.pointerEvents = '';
+            // The button that opened this view is now hidden; without this,
+            // focus falls to the page and the next Tab leaves the banner.
+            var title = settingsView ? settingsView.querySelector('.dpt-cb-settings-title') : null;
+            var first = title || (catInputs.length ? catInputs[0] : null);
+            if (first) { try { first.focus(); } catch (e) {} }
         }
 
         function dispatchConsentEvent(consent) {
@@ -503,6 +508,11 @@
             }
             isClosing = true;
             log('finishConsent', consent);
+            // A snippet already running on this page cannot be unloaded: when
+            // its category is withdrawn, reload so that code stops at once.
+            var withdrawn = ['functional', 'analytics', 'marketing'].some(function (cat) {
+                return injectedCats[cat] && !consent[cat];
+            });
             saveConsent(consent);
             purgeDenied(consent);
             // Signals before the scripts, so a tag injected now reads the
@@ -517,6 +527,11 @@
             if (mainView) mainView.style.display = '';
             if (settingsView) settingsView.style.display = 'none';
             dispatchConsentEvent(consent);
+            if (withdrawn) {
+                log('a running category was withdrawn - reloading');
+                try { location.reload(); } catch (e) {}
+                return;
+            }
             // Auto-release lock after a short window so the float button still works.
             setTimeout(function () { isClosing = false; }, 600);
         }

@@ -1235,7 +1235,7 @@ class Digitizer_Cookie_Consent_Frontend {
 				</div>
 
 				<div class="dpt-cb-settings-view" style="display:none;">
-					<h3 class="dpt-cb-settings-title"><?php echo esc_html( $t['settings_view_title'] ); ?></h3>
+					<h3 class="dpt-cb-settings-title" tabindex="-1"><?php echo esc_html( $t['settings_view_title'] ); ?></h3>
 
 					<div class="dpt-cb-category">
 						<div class="dpt-cb-category-head">

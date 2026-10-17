@@ -350,3 +350,6 @@
 /* Opt-in credit under the buttons. */
 #dpt-cb-banner .dpt-cb-credit { margin: 10px 0 0; font-size: 11px; opacity: .7; text-align: center; }
 #dpt-cb-banner .dpt-cb-credit a { color: inherit; }
+
+/* Focus lands on the heading when the preferences view opens; it is not a control. */
+#dpt-cb-banner .dpt-cb-settings-title:focus { outline: none; }
