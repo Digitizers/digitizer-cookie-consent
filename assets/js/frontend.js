@@ -185,10 +185,17 @@
             var external = !!s.getAttribute('src');
             if (external) {
                 activateWaiting = true;
-                s.onload = s.onerror = function () {
+                // Listeners, not onload/onerror: the script's own handlers,
+                // copied from its attributes, still run.
+                var resumed = false;
+                var resume = function () {
+                    if (resumed) return;
+                    resumed = true;
                     activateWaiting = false;
                     processActivateQueue();
                 };
+                s.addEventListener('load', resume);
+                s.addEventListener('error', resume);
             }
             if (node.parentNode) {
                 node.parentNode.replaceChild(s, node);
