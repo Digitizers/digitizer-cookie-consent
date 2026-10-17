@@ -1152,10 +1152,12 @@ class Digitizer_Cookie_Consent_Frontend {
 		$position_class = 'dpt-cb-pos-' . $o['position'];
 		$anim_class     = ' dpt-cb-anim-' . $o['animation'];
 		$mobile_class   = $this->hide_mobile_class( $o );
-		// Presence-only check on a read-only display flag, paired with a
-		// capability check - no state changes, so no nonce is involved.
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only preview flag, gated by manage_options.
-		$preview_mode   = isset( $_GET['digitizer_cc_preview'] ) && current_user_can( 'manage_options' );
+		// The admin's preview link (Digitizer_Cookie_Consent_Admin::preview_url())
+		// carries a nonce: a bare flag would let any link force the banner
+		// open for a logged-in administrator.
+		$preview_mode = isset( $_GET['digitizer_cc_preview'], $_GET['_wpnonce'] )
+			&& current_user_can( 'manage_options' )
+			&& wp_verify_nonce( sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ), 'digitizer_cc_preview' );
 
 		// CACHE-PROOF STRATEGY:
 		// Always render the banner with `dpt-cb-hidden`. The JavaScript

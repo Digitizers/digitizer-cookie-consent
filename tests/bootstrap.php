@@ -1404,3 +1404,9 @@ if ( ! function_exists( 'sanitize_hex_color' ) ) {
 }
 if ( ! function_exists( 'get_locale' ) ) { function get_locale() { return isset( $GLOBALS['dpt_stub_locale'] ) ? $GLOBALS['dpt_stub_locale'] : 'he_IL'; } }
 if ( ! function_exists( 'esc_html_e' ) ) { function esc_html_e( $t, $d = null ) { echo esc_html( $t ); } }
+// Form helpers the settings screen prints with.
+if ( ! function_exists( 'checked' ) ) { function checked( $a, $b = true, $echo = true ) { $r = (string) $a === (string) $b ? " checked='checked'" : ''; if ( $echo ) { echo $r; } return $r; } }
+if ( ! function_exists( 'selected' ) ) { function selected( $a, $b = true, $echo = true ) { $r = (string) $a === (string) $b ? " selected='selected'" : ''; if ( $echo ) { echo $r; } return $r; } }
+if ( ! function_exists( 'esc_textarea' ) ) { function esc_textarea( $t ) { return htmlspecialchars( (string) $t, ENT_QUOTES, 'UTF-8' ); } }
+if ( ! function_exists( 'esc_attr_e' ) ) { function esc_attr_e( $t, $d = null ) { echo esc_attr( $t ); } }
+if ( ! function_exists( 'wp_nonce_field' ) ) { function wp_nonce_field( $a = -1 ) { echo '<input type="hidden" name="_wpnonce" value="n" />'; } }

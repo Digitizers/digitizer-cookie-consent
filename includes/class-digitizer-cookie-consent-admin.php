@@ -1,16 +1,25 @@
 <?php
 /**
- * Cookie Banner module - admin settings page (8 tabs + language switcher).
+ * The settings screen: Settings -> Cookie Consent (8 tabs + language switcher).
+ *
+ * @package Digitizer_Cookie_Consent
  */
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 class Digitizer_Cookie_Consent_Admin {
 
-	const PAGE_SLUG = 'dpt-cookie-banner';
+	const PAGE_SLUG = 'digitizer-cookie-consent';
 	const NONCE     = 'dpt_cb_settings_nonce';
 
+	/** @var string The screen hook add_options_page() returned. */
+	private $hook = '';
+
 	public function __construct() {
+		add_action( 'admin_menu',                    array( $this, 'register_menu' ) );
+		add_action( 'admin_enqueue_scripts',         array( $this, 'enqueue_assets' ) );
+		add_action( 'admin_notices',                 array( $this, 'first_save_notice' ) );
+		add_filter( 'plugin_action_links_' . plugin_basename( DIGITIZER_COOKIE_CONSENT_FILE ), array( $this, 'row_links' ) );
 		add_action( 'admin_post_digitizer_cc_save',        array( $this, 'handle_save' ) );
 		add_action( 'admin_post_digitizer_cc_add_lang',    array( $this, 'handle_add_lang' ) );
 		add_action( 'admin_post_digitizer_cc_remove_lang', array( $this, 'handle_remove_lang' ) );
@@ -18,17 +27,110 @@ class Digitizer_Cookie_Consent_Admin {
 	}
 
 	/**
-	 * Called by DPT_Admin on admin_menu.
+	 * Settings -> Cookie Consent.
 	 */
-	public function register_menu( $parent_slug ) {
-		add_submenu_page(
-			$parent_slug,
-			__( 'Cookie Banner', 'digitizer-cookie-consent' ),
-			__( 'Cookie Banner', 'digitizer-cookie-consent' ),
+	public function register_menu() {
+		$this->hook = (string) add_options_page(
+			__( 'Cookie Consent', 'digitizer-cookie-consent' ),
+			__( 'Cookie Consent', 'digitizer-cookie-consent' ),
 			'manage_options',
 			self::PAGE_SLUG,
 			array( $this, 'render_page' )
 		);
+	}
+
+	/**
+	 * The screen hook of the settings page, for gating its assets.
+	 *
+	 * @return string
+	 */
+	public function screen_hook() {
+		return $this->hook;
+	}
+
+	/**
+	 * The screen's address.
+	 *
+	 * @param array $args Extra query arguments.
+	 * @return string
+	 */
+	public static function page_url( $args = array() ) {
+		return add_query_arg( array_merge( array( 'page' => self::PAGE_SLUG ), $args ), admin_url( 'options-general.php' ) );
+	}
+
+	/**
+	 * The admin's own scripts and styles - the color picker, the background
+	 * image picker, and the screen's layout - on its own screen only.
+	 *
+	 * @param string $hook The current admin screen's hook.
+	 */
+	public function enqueue_assets( $hook ) {
+		if ( '' === $this->hook || $hook !== $this->hook ) {
+			return;
+		}
+		wp_enqueue_style( 'wp-color-picker' );
+		wp_enqueue_media();
+		wp_enqueue_style( 'digitizer-cookie-consent-admin', DIGITIZER_COOKIE_CONSENT_URL . 'assets/css/admin.css', array( 'wp-color-picker' ), DIGITIZER_COOKIE_CONSENT_VERSION );
+		wp_enqueue_script( 'digitizer-cookie-consent-admin', DIGITIZER_COOKIE_CONSENT_URL . 'assets/js/admin.js', array( 'jquery', 'wp-color-picker' ), DIGITIZER_COOKIE_CONSENT_VERSION, true );
+	}
+
+	/**
+	 * A "Settings" link in the plugin's row.
+	 *
+	 * @param array $links The row's links.
+	 * @return array
+	 */
+	public function row_links( $links ) {
+		array_unshift( $links, '<a href="' . esc_url( self::page_url() ) . '">' . esc_html__( 'Settings', 'digitizer-cookie-consent' ) . '</a>' );
+		return $links;
+	}
+
+	/**
+	 * Until the settings are saved once, the banner is live with the default
+	 * texts - which wp-admin says, on the Plugins and Dashboard screens, to
+	 * the people who can change it.
+	 */
+	public function first_save_notice() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		if ( ! $screen || ! in_array( $screen->id, array( 'plugins', 'dashboard' ), true ) ) {
+			return;
+		}
+		if ( '1' === Digitizer_Cookie_Consent_Settings::get( 'saved' ) ) {
+			return;
+		}
+		printf(
+			'<div class="notice notice-info"><p>%s <a href="%s">%s</a></p></div>',
+			esc_html__( 'Digitizer Cookie Consent is showing the banner with its default texts. Review the texts and categories.', 'digitizer-cookie-consent' ),
+			esc_url( self::page_url() ),
+			esc_html__( 'Settings', 'digitizer-cookie-consent' )
+		);
+	}
+
+	/**
+	 * The admin page a request is for. A read-only screen check.
+	 *
+	 * @return string
+	 */
+	public static function current_page() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only screen check, not a state change.
+		if ( ! isset( $_GET['page'] ) || ! is_scalar( $_GET['page'] ) ) {
+			return '';
+		}
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only screen check, not a state change.
+		return sanitize_key( wp_unslash( $_GET['page'] ) );
+	}
+
+	/**
+	 * The front-end preview, forced open for an administrator. It carries a
+	 * nonce, which the front end verifies.
+	 *
+	 * @return string
+	 */
+	public static function preview_url() {
+		return wp_nonce_url( home_url( '/?digitizer_cc_preview=1' ), 'digitizer_cc_preview' );
 	}
 
 	/**
@@ -84,7 +186,7 @@ class Digitizer_Cookie_Consent_Admin {
 				$args['lang'] = $lang;
 			}
 		}
-		wp_safe_redirect( add_query_arg( $args, admin_url( 'admin.php' ) ) );
+		wp_safe_redirect( add_query_arg( $args, admin_url( 'options-general.php' ) ) );
 		exit;
 	}
 
@@ -104,7 +206,7 @@ class Digitizer_Cookie_Consent_Admin {
 		} else {
 			$args['dpt_lang_error'] = 1;
 		}
-		wp_safe_redirect( add_query_arg( $args, admin_url( 'admin.php' ) ) );
+		wp_safe_redirect( add_query_arg( $args, admin_url( 'options-general.php' ) ) );
 		exit;
 	}
 
@@ -121,7 +223,7 @@ class Digitizer_Cookie_Consent_Admin {
 		} else {
 			$args['dpt_lang_error'] = 1;
 		}
-		wp_safe_redirect( add_query_arg( $args, admin_url( 'admin.php' ) ) );
+		wp_safe_redirect( add_query_arg( $args, admin_url( 'options-general.php' ) ) );
 		exit;
 	}
 
@@ -152,13 +254,13 @@ class Digitizer_Cookie_Consent_Admin {
 		<div class="wrap dpt-wrap">
 			<h1 class="dpt-title">
 				<span class="dashicons dashicons-privacy"></span>
-				<?php esc_html_e( 'Cookie Banner', 'digitizer-cookie-consent' ); ?>
+				<?php esc_html_e( 'Cookie Consent', 'digitizer-cookie-consent' ); ?>
 				<span class="dpt-version">v<?php echo esc_html( DIGITIZER_COOKIE_CONSENT_VERSION ); ?></span>
 			</h1>
 
 			<h2 class="nav-tab-wrapper dpt-tabs">
 				<?php foreach ( $tabs as $key => $label ) : ?>
-					<a href="<?php echo esc_url( add_query_arg( array( 'page' => self::PAGE_SLUG, 'tab' => $key ), admin_url( 'admin.php' ) ) ); ?>"
+					<a href="<?php echo esc_url( add_query_arg( array( 'page' => self::PAGE_SLUG, 'tab' => $key ), admin_url( 'options-general.php' ) ) ); ?>"
 					   class="nav-tab <?php echo $current_tab === $key ? 'nav-tab-active' : ''; ?>">
 						<?php echo esc_html( $label ); ?>
 					</a>
@@ -396,7 +498,7 @@ class Digitizer_Cookie_Consent_Admin {
 
 		<div class="nav-tab-wrapper dpt-lang-tabs">
 			<?php foreach ( $o['languages'] as $code ) : ?>
-				<a href="<?php echo esc_url( add_query_arg( array( 'page' => self::PAGE_SLUG, 'tab' => 'texts', 'lang' => $code ), admin_url( 'admin.php' ) ) ); ?>"
+				<a href="<?php echo esc_url( add_query_arg( array( 'page' => self::PAGE_SLUG, 'tab' => 'texts', 'lang' => $code ), admin_url( 'options-general.php' ) ) ); ?>"
 				   class="nav-tab <?php echo $lang === $code ? 'nav-tab-active' : ''; ?>">
 					<?php echo esc_html( $this->lang_label( $code ) ); ?>
 					<?php if ( $code === $o['default_lang'] ) : ?>
@@ -1423,7 +1525,7 @@ class Digitizer_Cookie_Consent_Admin {
 				</div>
 			</div>
 			<p style="margin-top:12px;">
-				<a href="<?php echo esc_url( home_url( '/?digitizer_cc_preview=1' ) ); ?>" target="_blank" class="button button-primary" style="width:100%;text-align:center;">
+				<a href="<?php echo esc_url( self::preview_url() ); ?>" target="_blank" class="button button-primary" style="width:100%;text-align:center;">
 					<span class="dashicons dashicons-search"></span> <?php esc_html_e( 'View banner on the site', 'digitizer-cookie-consent' ); ?>
 				</a>
 			</p>
