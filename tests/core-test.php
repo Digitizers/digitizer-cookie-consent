@@ -97,6 +97,16 @@ dpt_test_eq( array( $c['consent_version'], $c['consent_days'] ), array( '1', '18
 $c = Digitizer_Cookie_Consent_Settings::sanitize( array( 'consent_version' => '4', 'consent_days' => '9999' ), Digitizer_Cookie_Consent_Settings::defaults() );
 dpt_test_eq( array( $c['consent_version'], $c['consent_days'] ), array( '4', '730' ), 'a real version is kept; days are capped at the form\'s 730' );
 
+/* Every number on the settings form falls back to its default when blank, and stays within the form's bounds. */
+$c = Digitizer_Cookie_Consent_Settings::sanitize( array( 'width' => '', 'max_width_pct' => '500', 'width_mobile' => '50', 'overlay_opacity' => '', 'close_opacity' => '2', 'show_delay' => '-3', 'width_corner' => 'abc' ), Digitizer_Cookie_Consent_Settings::defaults() );
+dpt_test_eq(
+	array( $c['width'], $c['max_width_pct'], $c['width_mobile'], $c['overlay_opacity'], $c['close_opacity'], $c['show_delay'], $c['width_corner'] ),
+	array( '700', '100', '200', '0.5', '1', '0', '380' ),
+	'blank or nonsense -> default; out of range -> the nearest bound'
+);
+$c = Digitizer_Cookie_Consent_Settings::sanitize( array( 'width' => '640', 'overlay_opacity' => '0.35' ), Digitizer_Cookie_Consent_Settings::defaults() );
+dpt_test_eq( array( $c['width'], $c['overlay_opacity'] ), array( '640', '0.35' ), 'a value in range is kept as entered' );
+
 /* The banner does not trap focus or make the page inert, so it does not claim to be modal. */
 ob_start(); $m->invoke( $f, Digitizer_Cookie_Consent_Settings::all(), Digitizer_Cookie_Consent_Settings::get_texts( 'en' ), 'en', 'ltr' ); $html = (string) ob_get_clean();
 dpt_test_ok( false !== strpos( $html, 'role="dialog"' ) && false === strpos( $html, 'aria-modal' ), 'a non-modal dialog' );

@@ -1047,7 +1047,7 @@ msgstr ""
 msgid "View banner on the site"
 msgstr ""
 
-#: includes/class-digitizer-cookie-consent-frontend.php:1208
+#: includes/class-digitizer-cookie-consent-frontend.php:1233
 msgid "Cookie consent by Digitizer"
 msgstr ""
 

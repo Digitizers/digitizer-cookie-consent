@@ -730,6 +730,25 @@ class Digitizer_Cookie_Consent_Settings {
 			'cat_functional_enabled', 'cat_analytics_enabled', 'cat_marketing_enabled',
 		);
 
+		// Number fields: [ min, max ] as the form shows them; null is no upper
+		// bound, and a float minimum makes the field a decimal.
+		$numbers = array(
+			'consent_days' => array( 1, 730 ), 'consent_version' => array( 1, null ), 'show_delay' => array( 0, 120 ),
+			'overlay_opacity' => array( 0.0, 1 ), 'bg_image_overlay_opacity' => array( 0.0, 1 ), 'close_opacity' => array( 0.1, 1 ),
+			'width' => array( 200, null ), 'width_corner' => array( 200, null ), 'width_mobile' => array( 200, null ),
+			'max_width_pct' => array( 10, 100 ), 'max_width_pct_mobile' => array( 10, 100 ),
+			'corner_offset_x' => array( 0, null ), 'corner_offset_y' => array( 0, null ),
+			'border_radius' => array( 0, null ), 'padding' => array( 0, null ), 'border_width' => array( 0, null ),
+			'close_size' => array( 12, 60 ), 'title_font_size' => array( 10, 80 ), 'title_margin_bottom' => array( 0, null ),
+			'title_shadow_blur' => array( 0, 40 ), 'title_shadow_y' => array( -20, 20 ),
+			'content_font_size' => array( 10, 40 ), 'content_shadow_blur' => array( 0, 40 ), 'content_shadow_y' => array( -20, 20 ),
+			'btn_height' => array( 0, null ), 'btn_font_size' => array( 8, 40 ),
+			'btn_accept_radius' => array( 0, null ), 'btn_reject_radius' => array( 0, null ), 'btn_settings_radius' => array( 0, null ), 'btn_save_radius' => array( 0, null ),
+			'float_offset_x' => array( 0, 500 ), 'float_offset_y' => array( 0, 500 ), 'float_offset_x_mobile' => array( 0, 500 ), 'float_offset_y_mobile' => array( 0, 500 ),
+			'float_button_size' => array( 30, 100 ), 'float_button_size_mobile' => array( 30, 100 ),
+		);
+		$numbers = array_intersect_key( $numbers, $defaults );
+
 		foreach ( $raw as $key => $raw_value ) {
 			if ( 'texts' === $key ) {
 				$clean['texts'] = self::sanitize_texts( $raw_value, $clean );
@@ -766,15 +785,20 @@ class Digitizer_Cookie_Consent_Settings {
 				$clean[ $key ] = '1' === $value ? '1' : '0';
 			} elseif ( in_array( $key, array( 'cleanup_functional', 'cleanup_analytics', 'cleanup_marketing' ), true ) ) {
 				$clean[ $key ] = implode( "\n", self::cookie_patterns( $value ) );
-			} elseif ( 'consent_version' === $key || 'consent_days' === $key ) {
-				// The precheck, frontend.js and the WP Consent API answer must
-				// read the same number: a blank or nonsense entry is the default,
-				// and days stop at the form's 730.
-				$n = (int) ( is_numeric( $value ) ? $value : 0 );
-				if ( 'consent_days' === $key ) {
-					$n = min( $n, 730 );
+			} elseif ( isset( $numbers[ $key ] ) ) {
+				// Blank or not a number is the default; anything else is held
+				// to the bounds the form shows. A blank width would otherwise
+				// become max-width:0 and hide the banner, and a blank consent
+				// version would be read differently by the precheck and by
+				// frontend.js.
+				list( $min, $max ) = $numbers[ $key ];
+				if ( ! is_numeric( $value ) ) {
+					$clean[ $key ] = $defaults[ $key ];
+				} else {
+					$n = is_float( $min ) ? (float) $value : (int) $value;
+					$n = max( $min, null === $max ? $n : min( $max, $n ) );
+					$clean[ $key ] = (string) $n;
 				}
-				$clean[ $key ] = $n >= 1 ? (string) $n : $defaults[ $key ];
 			} else {
 				$clean[ $key ] = sanitize_text_field( $value );
 			}

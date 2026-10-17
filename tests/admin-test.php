@@ -37,6 +37,7 @@ dpt_test_ok( ! isset( $GLOBALS['dpt_stub_scripts']['digitizer-cookie-consent-adm
 $admin->enqueue_assets( 'settings_page_digitizer-cookie-consent' );
 dpt_test_ok( isset( $GLOBALS['dpt_stub_scripts']['digitizer-cookie-consent-admin'] ) && in_array( 'wp-color-picker', $GLOBALS['dpt_stub_scripts']['digitizer-cookie-consent-admin'], true ) && $GLOBALS['dpt_stub_media'], 'on its screen: admin.js after the color picker, and the media library' );
 $js  = (string) file_get_contents( dirname( __DIR__ ) . '/assets/js/admin.js' );
+dpt_test_ok( false !== strpos( $js, '.dpt-switch input[type="checkbox"]' ) && false !== strpos( $js, 'aria-labelledby' ), 'admin.js names every settings switch by its row heading' );
 dpt_test_ok( false !== strpos( $js, "'.dpt-color'" ) && false !== strpos( $js, 'wpColorPicker' ), 'admin.js starts the color pickers' );
 dpt_test_ok( false !== strpos( $js, 'wp.media' ) && false !== strpos( $js, 'bg_image_url' ), 'and the background image picker' );
 $css = (string) file_get_contents( dirname( __DIR__ ) . '/assets/css/admin.css' );
