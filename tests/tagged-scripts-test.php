@@ -57,7 +57,8 @@ var body = { children: [], replaceChild: function (n, o) { var i = this.children
   if (n.getAttribute('src')) setTimeout(function () { (n.listeners && n.listeners.load || []).forEach(function (f) { f(); }); }, 5); } };
 function add(attrs, text) { var e = new El(attrs, text); e.parentNode = body; body.children.push(e); return e; }
 add({ type: 'text/plain', 'data-dpt-cb-category': 'analytics', src: 'https://example.test/gtag.js', onload: 'initGtag()' });
-add({ type: 'text/plain', 'data-dpt-cb-category': 'analytics' }, 'gtag("config")');
+var withNonce = add({ type: 'text/plain', 'data-dpt-cb-category': 'analytics', nonce: '' }, 'gtag("config")');
+withNonce.nonce = 'abc123'; // browsers hide a connected script's nonce attribute; the property keeps it
 add({ type: 'text/plain', 'data-dpt-cb-category': 'marketing' }, 'fbq("init")');
 add({ type: 'text/plain', 'data-dpt-cb-category': 'functional', 'data-dpt-cb-type': 'module' }, 'chat()');
 add({ type: 'text/plain' }, 'not ours');
@@ -74,7 +75,8 @@ activateTaggedScripts(__CONSENT__);
 activateTaggedScripts(__CONSENT__); // a second call (boot, then a choice) runs nothing twice
 setTimeout(function () {
   var lib = body.children.filter(function (e) { return e.getAttribute('src'); })[0];
-  process.stdout.write(JSON.stringify({ onload: lib.getAttribute('onload'), ownOnload: typeof lib.onload, ran: ran, inert: body.children.filter(function (e) { return e.getAttribute('type') === 'text/plain'; }).length, cats: injectedCats }));
+  var inline = body.children.filter(function (e) { return e.text === 'gtag("config")'; })[0];
+  process.stdout.write(JSON.stringify({ nonce: inline.nonce || null, onload: lib.getAttribute('onload'), ownOnload: typeof lib.onload, ran: ran, inert: body.children.filter(function (e) { return e.getAttribute('type') === 'text/plain'; }).length, cats: injectedCats }));
 }, 50);
 JS;
 	$harness = str_replace( array( '__CATS__', '__BLOCK__', '__CONSENT__' ), array( json_encode( $cats ), $block, json_encode( $consent ) ), $harness );
@@ -90,6 +92,7 @@ $all = array( 'functional' => true, 'analytics' => true, 'marketing' => true );
 $r = $run( array( 'functional' => false, 'analytics' => true, 'marketing' => false ), $all );
 dpt_test_eq( $r['ran'] ?? $r, array( 'js:https://example.test/gtag.js', 'js:gtag("config")' ), 'analytics allowed: its two scripts run, in page order, the inline one after the library loads - once each' );
 dpt_test_eq( array( $r['onload'], $r['ownOnload'] ), array( 'initGtag()', 'undefined' ), 'the script\'s own onload handler is kept; the queue listens alongside it' );
+dpt_test_eq( $r['nonce'], 'abc123', 'a CSP nonce comes across from the property, not the hidden attribute' );
 dpt_test_eq( $r['inert'], 3, 'marketing, functional and an untagged text/plain script stay inert' );
 dpt_test_eq( array( $r['cats']['analytics'], $r['cats']['marketing'] ), array( true, false ), 'and the page remembers which category is running, for a later withdrawal' );
 

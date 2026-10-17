@@ -181,6 +181,9 @@
                 if (name === 'data-dpt-cb-type') { s.setAttribute('type', node.attributes[i].value); continue; }
                 s.setAttribute(name, node.attributes[i].value);
             }
+            // A connected script's nonce attribute reads empty (browsers hide
+            // it); the property still has it, and CSP needs it.
+            if (node.nonce) s.nonce = node.nonce;
             s.text = node.text || node.textContent || '';
             var external = !!s.getAttribute('src');
             if (external) {
