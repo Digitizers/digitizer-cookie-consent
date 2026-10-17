@@ -227,7 +227,7 @@ unset( $_COOKIE['dpt_consent'] );
 
 $js = (string) file_get_contents( dirname( __DIR__ ) . '/assets/js/frontend.js' );
 $finish = substr( $js, (int) strpos( $js, 'function finishConsent' ) );
-dpt_test_ok( strpos( $finish, 'signalConsentMode(consent);' ) < strpos( $finish, 'injectConsentedScripts(consent);' ), 'a choice on the page is signalled before the consented scripts are injected' );
+dpt_test_ok( strpos( $finish, 'signalConsentMode(consent);' ) < strpos( $finish, 'activateTaggedScripts(consent);' ), 'a choice on the page is signalled before the tagged scripts are activated' );
 dpt_test_ok( false !== strpos( $finish, 'signalWpConsentApi(consent);' ), 'and shared with the WP Consent API' );
 dpt_test_ok( false !== strpos( $js, "window.wp_set_consent(apiCat, granted(consent, cat) ? 'allow' : 'deny');" ), 'each API category is allowed or denied, never left out' );
 dpt_test_ok( false !== strpos( $js, 'apiPending = { consent: consent };' ) && false !== strpos( $js, 'setInterval(function () {' ), 'if the API script comes later - even only after an interaction - the latest choice waits for it' );

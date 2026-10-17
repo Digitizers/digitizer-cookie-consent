@@ -21,7 +21,6 @@ class Digitizer_Cookie_Consent_Settings {
 			'animation'          => 'slide-up',     // fade | slide-up | slide-down | zoom
 			'show_on_mobile'     => '1',
 			'auto_accept_scroll' => '0',
-			'block_scripts'      => '1',
 			// Signal the visitor's choice to Google tags (Consent Mode v2) and to
 			// plugins that read the WP Consent API. Off until a site asks for it:
 			// switching Consent Mode on starts every Google tag on "denied".
@@ -193,10 +192,10 @@ class Digitizer_Cookie_Consent_Settings {
 			'cleanup_analytics'      => '',
 			'cleanup_marketing'      => '',
 
-			// Scripts per category (placed in <head> only after consent).
-			'scripts_functional' => '',
-			'scripts_analytics'  => '',
-			'scripts_marketing'  => '',
+			// Set on import when the Digitizer Pro Tools module held pasted
+			// snippets. This plugin stores no code; the settings screen shows
+			// them read-only, with how to tag them, until marked as moved.
+			'scripts_moved'      => '0',
 
 			// Consent behavior.
 			'consent_days'       => '180',
@@ -394,7 +393,7 @@ class Digitizer_Cookie_Consent_Settings {
 			$merged['font_family'] = 'inherit';
 		}
 
-		// These values are printed verbatim into the inline <style> block, and
+		// These values are printed verbatim into the inline style block, and
 		// sanitize_text_field() leaves CSS punctuation intact. The admin only
 		// ever offers the values below (they are <select> fields), so pin them
 		// to that list: a hand-crafted POST cannot inject a CSS declaration.
@@ -425,7 +424,7 @@ class Digitizer_Cookie_Consent_Settings {
 	}
 
 	/**
-	 * Settings whose value is written straight into the inline <style> block and
+	 * Settings whose value is written straight into the inline style block and
 	 * therefore must match one of the values the admin actually offers.
 	 *
 	 * @return array<string,string[]>
@@ -472,7 +471,7 @@ class Digitizer_Cookie_Consent_Settings {
 	// --- Typography --------------------------------------------------------
 
 	/**
-	 * Sanitize a CSS font stack. The value is printed inside an inline <style>
+	 * Sanitize a CSS font stack. The value is printed inside an inline style element
 	 * block, so anything that could terminate the declaration or open a new
 	 * rule (;{}()<>@\ and newlines) is stripped rather than escaped - only font
 	 * names, quotes, commas, spaces, dots, hyphens and underscores survive.
@@ -672,11 +671,10 @@ class Digitizer_Cookie_Consent_Settings {
 
 		update_option( self::OPTION, $clean );
 
-		// Every module setting shapes the rendered/cached HTML (precheck
-		// version, banner markup, raw snippets when blocking is off, the
-		// localized config...), so any actual change must invalidate the
-		// page caches - otherwise stale pages keep the old behavior, e.g.
-		// keep running tags after block_scripts was switched on.
+		// Every setting shapes the rendered/cached HTML (precheck version,
+		// banner markup, the localized config...), so any actual change must
+		// invalidate the page caches - otherwise stale pages keep the old
+		// behavior, e.g. a category switched off still offered.
 		if ( $clean != $before ) {
 			self::purge_page_caches();
 		}
@@ -696,8 +694,6 @@ class Digitizer_Cookie_Consent_Settings {
 		$defaults = self::defaults();
 		$clean    = $base;
 
-		// Script fields (allow full script tags for trusted admins).
-		$script_fields = array( 'scripts_functional', 'scripts_analytics', 'scripts_marketing' );
 
 		// URL fields.
 		$url_fields = array( 'policy_url', 'bg_image_url' );
@@ -718,7 +714,7 @@ class Digitizer_Cookie_Consent_Settings {
 
 		// Checkbox fields.
 		$checkbox_fields = array(
-			'enabled', 'show_on_mobile', 'auto_accept_scroll', 'block_scripts',
+			'enabled', 'show_on_mobile', 'auto_accept_scroll',
 			'consent_mode', 'wp_consent_api', 'credit',
 			'box_shadow', 'overlay_enabled',
 			'title_shadow_enabled', 'content_shadow_enabled',
@@ -764,18 +760,12 @@ class Digitizer_Cookie_Consent_Settings {
 			if ( 'languages' === $key ) {
 				continue; // Managed only via add_language()/remove_language().
 			}
-			if ( ! array_key_exists( $key, $defaults ) ) {
-				continue; // Unknown field - ignore.
+			if ( ! array_key_exists( $key, $defaults ) || 'scripts_moved' === $key ) {
+				continue; // Unknown field, or one only the plugin sets - ignore.
 			}
 			$value = is_array( $raw_value ) ? '' : wp_unslash( $raw_value );
 
-			if ( in_array( $key, $script_fields, true ) ) {
-				if ( current_user_can( 'unfiltered_html' ) ) {
-					$clean[ $key ] = $value;
-				} else {
-					$clean[ $key ] = wp_kses_post( $value );
-				}
-			} elseif ( in_array( $key, $url_fields, true ) ) {
+			if ( in_array( $key, $url_fields, true ) ) {
 				$clean[ $key ] = esc_url_raw( $value );
 			} elseif ( in_array( $key, $optional_colors, true ) ) {
 				$clean[ $key ] = '' === $value ? '' : ( sanitize_hex_color( $value ) ?: '' );
@@ -809,11 +799,10 @@ class Digitizer_Cookie_Consent_Settings {
 
 	/**
 	 * The module's option, as a site moving from Digitizer Pro Tools has it,
-	 * made into this plugin's. Everything comes across: the languages a site
-	 * added (save() ignores the list, and its text sanitiser keeps only the
-	 * destination's languages), the default language, and the snippets as
-	 * stored - they were checked when they were saved, and sanitize() would
-	 * strip their <script> tags for a user without unfiltered_html.
+	 * made into this plugin's. Every setting comes across, including the
+	 * languages a site added (save() ignores the list, and its text sanitiser
+	 * keeps only the destination's languages) and the default language. The
+	 * pasted snippets do not: see below.
 	 *
 	 * @param array $theirs The module's option.
 	 * @return array
@@ -843,12 +832,28 @@ class Digitizer_Cookie_Consent_Settings {
 		if ( isset( $theirs['default_lang'] ) && in_array( $theirs['default_lang'], $clean['languages'], true ) ) {
 			$clean['default_lang'] = $theirs['default_lang'];
 		}
-		foreach ( array( 'scripts_functional', 'scripts_analytics', 'scripts_marketing' ) as $key ) {
-			if ( isset( $theirs[ $key ] ) && is_string( $theirs[ $key ] ) ) {
-				$clean[ $key ] = $theirs[ $key ];
+		// Pasted snippets are not imported: this plugin stores and prints no
+		// code. They stay in the module's option; the flag has the settings
+		// screen show them, read-only, with how to tag them instead.
+		$clean['scripts_moved'] = '' === trim( implode( '', self::dpt_snippets( $theirs ) ) ) ? '0' : '1';
+		return $clean;
+	}
+
+	/**
+	 * The snippets the Digitizer Pro Tools module held, by category.
+	 *
+	 * @param array $theirs The module's option.
+	 * @return array<string,string>
+	 */
+	public static function dpt_snippets( array $theirs ) {
+		$out = array();
+		foreach ( array( 'functional', 'analytics', 'marketing' ) as $cat ) {
+			$code = isset( $theirs[ 'scripts_' . $cat ] ) && is_string( $theirs[ 'scripts_' . $cat ] ) ? trim( $theirs[ 'scripts_' . $cat ] ) : '';
+			if ( '' !== $code ) {
+				$out[ $cat ] = $code;
 			}
 		}
-		return $clean;
+		return $out;
 	}
 
 	/**

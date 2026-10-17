@@ -12,12 +12,12 @@ A cookie consent banner for Hebrew and multilingual sites: categories, blocking 
 
 == Description ==
 
-Digitizer Cookie Consent shows a cookie consent banner, holds back the scripts you list until a visitor agrees to their category, and tells Google's tags and other plugins what the visitor chose. It was built for Hebrew and multilingual sites, and works on any site.
+Digitizer Cookie Consent shows a cookie consent banner, holds back the scripts you tag until a visitor agrees to their category, and tells Google's tags and other plugins what the visitor chose. It was built for Hebrew and multilingual sites, and works on any site.
 
 **What it does**
 
 * Four categories - essential, functional, analytics, marketing - each with its own switch in the preferences view.
-* Scripts you paste per category (Google Analytics, Tag Manager, Meta Pixel, any snippet) load only after the visitor consents to that category.
+* Your own scripts wait for consent: tag a script with its category (`type="text/plain" data-dpt-cb-category="analytics"`) wherever it is - theme, header plugin, Tag Manager - and it runs only after the visitor allows that category. The plugin stores and adds no code of its own.
 * Google Consent Mode v2: the defaults are set first in the page head, before any Google tag, and updated from the visitor's choice.
 * The WP Consent API: plugins that read it, such as Site Kit and WooCommerce order attribution, follow the visitor's choice.
 * When a visitor refuses or withdraws a category, the cookies you list for it are deleted from the browser, and again on every page while it stays refused.
@@ -32,10 +32,6 @@ Texts are edited per language - Hebrew and English are seeded, and any language 
 
 Colors, fonts (or Elementor's global font), sizes, corner radius, positions, button styles, a background image, an overlay and entry animations - enough to match an existing banner with settings alone, no custom CSS.
 
-**Admin-provided scripts**
-
-The scripts you paste on the Scripts tab are stored as you entered them and printed on your site: after consent when script blocking is on, or in the page head when it is off. Only a user who may post unfiltered HTML can save scripts; anyone else's are filtered.
-
 **Your own legal review**
 
 This plugin gives you the tools - categories, blocking until consent, a reject button as prominent as accept, a way to withdraw consent. Whether a particular site meets the law that applies to it depends on what that site does. Check with your own legal adviser.
@@ -48,7 +44,7 @@ None. The plugin sends nothing anywhere. Google's tags, if you use them, are you
 
 1. Install and activate the plugin.
 2. The banner is live at once with its default texts. Go to Settings -> Cookie Consent to review the texts, the categories and the design.
-3. Paste each tracking script into its category on the Scripts tab, and turn on Google Consent Mode v2 if you use Google's tags.
+3. Tag each tracking script with its category, as the Scripts tab shows, and turn on Google Consent Mode v2 if you use Google's tags.
 
 == Frequently Asked Questions ==
 
@@ -62,7 +58,11 @@ No. The visitor's choice is kept in their own browser (a first-party cookie and 
 
 = I am moving from Digitizer Pro Tools' Cookie Banner. =
 
-Activate this plugin: it imports the module's settings - texts in every language, design, categories, scripts, the consent version - and keeps the same consent cookie, so visitors who already chose are not asked again. Digitizer Pro Tools steps aside while this plugin is active.
+Activate this plugin: it imports the module's settings - texts in every language, design, categories, the consent version - and keeps the same consent cookie, so visitors who already chose are not asked again. Digitizer Pro Tools steps aside while this plugin is active. Scripts pasted in the module are not brought over, since this plugin stores no code: the settings screen shows them, read-only, so you can put them back in your theme or Tag Manager with the category tag.
+
+= How do I make a script wait for consent? =
+
+Change its opening tag from `<script>` to `<script type="text/plain" data-dpt-cb-category="analytics">` (or `functional`, `marketing`). Keep `src` and everything else as it is. The browser leaves it alone until the visitor allows that category; then the plugin runs it. Add `data-dpt-cb-type="module"` for a module script.
 
 = Can it delete cookies set by Facebook or LinkedIn? =
 

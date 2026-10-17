@@ -22,7 +22,6 @@ class Digitizer_Cookie_Consent_Frontend {
 	public function __construct() {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue' ) );
 		add_action( 'wp_footer',          array( $this, 'render_banner' ), 99 );
-		add_action( 'wp_head',            array( $this, 'inject_consented_scripts' ), 99 );
 		// High-priority inline check: runs before any deferred script can mess with the banner.
 		add_action( 'wp_head',            array( $this, 'inject_inline_consent_check' ), 1 );
 		// WP Rocket: don't optimize/defer/delay our JS files.
@@ -309,7 +308,7 @@ class Digitizer_Cookie_Consent_Frontend {
 		$o            = Digitizer_Cookie_Consent_Settings::all();
 		$consent_mode = '1' === $o['consent_mode'] && $this->is_active() && self::signals_possible( $o );
 		// The script body is built here, then printed through
-		// wp_print_inline_script_tag(): never a raw <script>.
+		// wp_print_inline_script_tag(): never a raw script tag.
 		ob_start();
 		?>
 		<?php
@@ -522,19 +521,6 @@ class Digitizer_Cookie_Consent_Frontend {
 		$o    = Digitizer_Cookie_Consent_Settings::all();
 		$lang = $this->resolve_lang( $o );
 
-		// With script blocking on, the client is the ONLY injector of
-		// consented snippets - server-rendered HTML can be cached and served
-		// to other visitors, so it must never contain them (see
-		// inject_consented_scripts()).
-		$scripts = array();
-		if ( '1' === $o['block_scripts'] ) {
-			$scripts = array(
-				'functional' => '1' === $o['cat_functional_enabled'] ? (string) $o['scripts_functional'] : '',
-				'analytics'  => '1' === $o['cat_analytics_enabled'] ? (string) $o['scripts_analytics'] : '',
-				'marketing'  => '1' === $o['cat_marketing_enabled'] ? (string) $o['scripts_marketing'] : '',
-			);
-		}
-
 		wp_localize_script( 'digitizer-cookie-consent', 'DigitizerCookieConsentConfig', array(
 			'version'          => DIGITIZER_COOKIE_CONSENT_VERSION,
 			'consentVersion'   => (string) $o['consent_version'],
@@ -551,8 +537,6 @@ class Digitizer_Cookie_Consent_Frontend {
 			'dir'              => $this->lang_dir( $lang ),
 			'isMobile'         => wp_is_mobile(),
 			'showOnMobile'     => '1' === $o['show_on_mobile'],
-			'blockScripts'     => '1' === $o['block_scripts'],
-			'scripts'          => $scripts,
 			'openSelector'     => self::open_selector(),
 			'openHash'         => self::OPEN_HASH,
 			'cookieDomain'     => self::cookie_domain(),
@@ -592,53 +576,6 @@ class Digitizer_Cookie_Consent_Frontend {
 			return null;
 		}
 		return $data;
-	}
-
-	/**
-	 * Inject scripts to <head> when script blocking is OFF.
-	 *
-	 * With blocking ON, consented snippets are injected ONLY client-side
-	 * (frontend.js) based on the visitor's own consent: server-rendered HTML
-	 * may be stored by a full-page cache and served to OTHER visitors, so
-	 * baking consented tags into it would run them for people who never
-	 * consented.
-	 */
-	public function inject_consented_scripts() {
-		if ( is_admin() ) {
-			return;
-		}
-		$o = Digitizer_Cookie_Consent_Settings::all();
-		if ( '1' !== $o['enabled'] ) {
-			return;
-		}
-		if ( '1' !== $o['block_scripts'] ) {
-			// Script blocking is off - load everything for everyone, but a
-			// disabled category stays off: it is no longer disclosed in the
-			// preferences UI, so its leftover snippet must not run.
-			if ( '1' === $o['cat_functional_enabled'] ) {
-				$this->echo_script_block( $o['scripts_functional'] );
-			}
-			if ( '1' === $o['cat_analytics_enabled'] ) {
-				$this->echo_script_block( $o['scripts_analytics'] );
-			}
-			if ( '1' === $o['cat_marketing_enabled'] ) {
-				$this->echo_script_block( $o['scripts_marketing'] );
-			}
-		}
-	}
-
-	/**
-	 * Output a block of admin-provided scripts. Content was gated by the
-	 * unfiltered_html capability at save time.
-	 */
-	private function echo_script_block( $raw ) {
-		$raw = trim( (string) $raw );
-		if ( '' === $raw ) {
-			return;
-		}
-		echo "\n<!-- DPT cookie consent script -->\n";
-		echo $raw . "\n"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Raw tracking snippet; gated by unfiltered_html at save time and meaningless if escaped.
-		echo "<!-- /DPT -->\n";
 	}
 
 	/**
@@ -692,7 +629,7 @@ class Digitizer_Cookie_Consent_Frontend {
 
 	/**
 	 * The custom CSS for this banner instance, added to the plugin's
-	 * stylesheet with wp_add_inline_style() - never a raw <style>.
+	 * stylesheet with wp_add_inline_style() - never a raw style tag.
 	 *
 	 * @param array $o Settings.
 	 * @return string
@@ -777,7 +714,7 @@ class Digitizer_Cookie_Consent_Frontend {
 		$fb_pos_d      = $this->float_button_position_css( $fb_corner, $fb_offset_x_d, $fb_offset_y_d );
 		$fb_pos_m      = $this->float_button_position_css( $fb_corner, $fb_offset_x_m, $fb_offset_y_m );
 		// '' when the banner should inherit the site font; already sanitized to
-		// a bare font stack (no ; { } etc.), so it is safe inside <style>.
+		// a bare font stack (no ; { } etc.), so it is safe inside a style element.
 		$font_family   = Digitizer_Cookie_Consent_Settings::font_family_css();
 
 		// Box sizing is emitted with the position class and !important so it
@@ -812,7 +749,7 @@ class Digitizer_Cookie_Consent_Frontend {
 		 * sanitize_font_family()).
 		 *
 		 * HTML escaping at the echo site would be wrong here, not merely
-		 * redundant: the content of a <style> element is raw text, so a
+		 * redundant: the content of a style element is raw text, so a
 		 * browser never decodes entities inside it - esc_attr() would turn a
 		 * font stack like "Open Sans", sans-serif into &quot;Open Sans&quot;
 		 * and break the declaration.

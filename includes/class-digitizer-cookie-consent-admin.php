@@ -23,6 +23,8 @@ class Digitizer_Cookie_Consent_Admin {
 		add_action( 'admin_post_digitizer_cc_save',        array( $this, 'handle_save' ) );
 		add_action( 'admin_post_digitizer_cc_add_lang',    array( $this, 'handle_add_lang' ) );
 		add_action( 'admin_post_digitizer_cc_remove_lang', array( $this, 'handle_remove_lang' ) );
+		add_action( 'admin_post_digitizer_cc_scripts_moved', array( $this, 'handle_scripts_moved' ) );
+		add_action( 'admin_notices',                 array( $this, 'moved_scripts_notice' ) );
 		add_action( 'admin_notices',                 array( $this, 'maybe_show_notices' ) );
 	}
 
@@ -95,7 +97,7 @@ class Digitizer_Cookie_Consent_Admin {
 			return;
 		}
 		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
-		if ( ! $screen || ! in_array( $screen->id, array( 'plugins', 'dashboard' ), true ) ) {
+		if ( ! $screen || 'plugins' !== $screen->id ) {
 			return;
 		}
 		if ( '1' === Digitizer_Cookie_Consent_Settings::get( 'saved' ) ) {
@@ -107,6 +109,46 @@ class Digitizer_Cookie_Consent_Admin {
 			esc_url( self::page_url() ),
 			esc_html__( 'Settings', 'digitizer-cookie-consent' )
 		);
+	}
+
+	/**
+	 * A site that moved from Digitizer Pro Tools with snippets pasted in the
+	 * module: this plugin does not run stored code, so they are shown here,
+	 * read-only, with how to tag them, until the site marks them as moved.
+	 * On the Plugins screen and this plugin's own screen only.
+	 */
+	public function moved_scripts_notice() {
+		if ( ! current_user_can( 'manage_options' ) || '1' !== Digitizer_Cookie_Consent_Settings::get( 'scripts_moved' ) ) {
+			return;
+		}
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		if ( ! $screen || ! in_array( $screen->id, array( 'plugins', 'settings_page_' . self::PAGE_SLUG ), true ) ) {
+			return;
+		}
+		$snippets = Digitizer_Cookie_Consent_Settings::dpt_snippets( (array) get_option( Digitizer_Cookie_Consent_Core::DPT_OPTION, array() ) );
+		?>
+		<div class="notice notice-warning">
+			<p><strong><?php esc_html_e( 'Your scripts from Digitizer Pro Tools were not brought over.', 'digitizer-cookie-consent' ); ?></strong>
+			<?php esc_html_e( 'This plugin does not store or add code. Put each script back in your theme, a header plugin or Google Tag Manager, and change its opening tag as shown under Settings > Cookie Consent > Scripts, so it still waits for consent.', 'digitizer-cookie-consent' ); ?></p>
+			<?php foreach ( $snippets as $cat => $code ) : ?>
+				<p><label><?php echo esc_html( ucfirst( $cat ) ); ?><br />
+				<textarea class="large-text code" rows="4" dir="ltr" readonly><?php echo esc_textarea( $code ); ?></textarea></label></p>
+			<?php endforeach; ?>
+			<p><a class="button" href="<?php echo esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=digitizer_cc_scripts_moved' ), 'digitizer_cc_scripts_moved' ) ); ?>"><?php esc_html_e( 'I have moved them', 'digitizer-cookie-consent' ); ?></a></p>
+		</div>
+		<?php
+	}
+
+	public function handle_scripts_moved() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You are not allowed to do that.', 'digitizer-cookie-consent' ) );
+		}
+		check_admin_referer( 'digitizer_cc_scripts_moved' );
+		$o                  = Digitizer_Cookie_Consent_Settings::all();
+		$o['scripts_moved'] = '0';
+		update_option( Digitizer_Cookie_Consent_Settings::OPTION, $o );
+		wp_safe_redirect( self::page_url() );
+		exit;
 	}
 
 	/**
@@ -261,7 +303,7 @@ class Digitizer_Cookie_Consent_Admin {
 			<h2 class="nav-tab-wrapper dpt-tabs">
 				<?php foreach ( $tabs as $key => $label ) : ?>
 					<a href="<?php echo esc_url( add_query_arg( array( 'page' => self::PAGE_SLUG, 'tab' => $key ), admin_url( 'options-general.php' ) ) ); ?>"
-					   class="nav-tab <?php echo $current_tab === $key ? 'nav-tab-active' : ''; ?>">
+					   class="nav-tab <?php echo esc_attr( $current_tab === $key ? 'nav-tab-active' : '' ); ?>">
 						<?php echo esc_html( $label ); ?>
 					</a>
 				<?php endforeach; ?>
@@ -426,13 +468,6 @@ class Digitizer_Cookie_Consent_Admin {
 				</td>
 			</tr>
 			<tr>
-				<th><?php esc_html_e( 'Block scripts until consent', 'digitizer-cookie-consent' ); ?></th>
-				<td>
-					<?php $this->switch_field( 'block_scripts', $o['block_scripts'] ); ?>
-					<p class="description"><?php esc_html_e( 'Scripts from the "Scripts" tab load only after the visitor consents to the matching category.', 'digitizer-cookie-consent' ); ?></p>
-				</td>
-			</tr>
-			<tr>
 				<th><?php esc_html_e( 'Credit', 'digitizer-cookie-consent' ); ?></th>
 				<td>
 					<?php $this->switch_field( 'credit', $o['credit'] ); ?>
@@ -499,7 +534,7 @@ class Digitizer_Cookie_Consent_Admin {
 		<div class="nav-tab-wrapper dpt-lang-tabs">
 			<?php foreach ( $o['languages'] as $code ) : ?>
 				<a href="<?php echo esc_url( add_query_arg( array( 'page' => self::PAGE_SLUG, 'tab' => 'texts', 'lang' => $code ), admin_url( 'options-general.php' ) ) ); ?>"
-				   class="nav-tab <?php echo $lang === $code ? 'nav-tab-active' : ''; ?>">
+				   class="nav-tab <?php echo esc_attr( $lang === $code ? 'nav-tab-active' : '' ); ?>">
 					<?php echo esc_html( $this->lang_label( $code ) ); ?>
 					<?php if ( $code === $o['default_lang'] ) : ?>
 						<span class="dpt-default-badge"><?php esc_html_e( 'default', 'digitizer-cookie-consent' ); ?></span>
@@ -1259,7 +1294,7 @@ class Digitizer_Cookie_Consent_Admin {
 	private function tab_categories( $o ) {
 		?>
 		<h2><span class="dashicons dashicons-category"></span> <?php esc_html_e( 'Cookie Categories', 'digitizer-cookie-consent' ); ?></h2>
-		<p class="description dpt-big-desc"><?php esc_html_e( 'Each category shows a separate toggle on the advanced-preferences screen. Scripts from the "Scripts" tab load only after the visitor consents to the matching category. Category names and descriptions are edited per language on the "Texts" tab.', 'digitizer-cookie-consent' ); ?></p>
+		<p class="description dpt-big-desc"><?php esc_html_e( 'Each category shows a separate toggle on the advanced-preferences screen. Scripts tagged with a category (see the "Scripts" tab) run only after the visitor consents to it. Category names and descriptions are edited per language on the "Texts" tab.', 'digitizer-cookie-consent' ); ?></p>
 
 		<table class="form-table dpt-form">
 			<tr>
@@ -1302,43 +1337,39 @@ class Digitizer_Cookie_Consent_Admin {
 	}
 
 	private function tab_scripts( $o ) {
+		$cats = array(
+			'functional' => __( 'Functional', 'digitizer-cookie-consent' ),
+			'analytics'  => __( 'Analytics', 'digitizer-cookie-consent' ),
+			'marketing'  => __( 'Marketing', 'digitizer-cookie-consent' ),
+		);
 		?>
-		<h2><span class="dashicons dashicons-editor-code"></span> <?php esc_html_e( 'Scripts loaded after consent', 'digitizer-cookie-consent' ); ?></h2>
+		<h2><span class="dashicons dashicons-editor-code"></span> <?php esc_html_e( 'Scripts that wait for consent', 'digitizer-cookie-consent' ); ?></h2>
 		<div class="dpt-info-box">
-			<p><strong><?php esc_html_e( 'How does it work?', 'digitizer-cookie-consent' ); ?></strong></p>
-			<p><?php esc_html_e( 'Paste the full HTML snippets here (Google Analytics, Facebook Pixel, GTM...). They are injected into the site <head> only after the visitor consents to the matching category.', 'digitizer-cookie-consent' ); ?></p>
-			<p><?php esc_html_e( 'Paste the complete code including the <script> tags.', 'digitizer-cookie-consent' ); ?></p>
+			<p><?php esc_html_e( 'The plugin does not store or add code. Keep your tracking scripts where they are now (your theme, a header plugin or Google Tag Manager), and change the opening tag of each so it waits for the visitor\'s consent:', 'digitizer-cookie-consent' ); ?></p>
+			<p><code dir="ltr">&lt;<?php echo esc_html( self::tag_example( 'analytics' ) ); ?>&gt;</code></p>
+			<p><?php esc_html_e( 'A tagged script does not run until the visitor allows its category; then it runs as written. For an external file, keep its src attribute. To run it as a module, add data-dpt-cb-type="module".', 'digitizer-cookie-consent' ); ?></p>
+			<p><?php esc_html_e( 'With Google tags, you can instead turn on Consent Mode v2 in General.', 'digitizer-cookie-consent' ); ?></p>
 		</div>
-
-		<h3 class="dpt-section-heading"><span class="dashicons dashicons-admin-settings"></span> <?php esc_html_e( 'Functional scripts', 'digitizer-cookie-consent' ); ?></h3>
 		<table class="form-table dpt-form">
+			<?php foreach ( $cats as $cat => $label ) : ?>
 			<tr>
-				<td>
-					<textarea name="dpt_cb[scripts_functional]" rows="6" class="large-text code" dir="ltr" placeholder="<script>/* Example */</script>"><?php echo esc_textarea( $o['scripts_functional'] ); ?></textarea>
-				</td>
+				<th><?php echo esc_html( $label ); ?></th>
+				<td><code dir="ltr">&lt;<?php echo esc_html( self::tag_example( $cat ) ); ?>&gt;</code></td>
 			</tr>
-		</table>
-
-		<h3 class="dpt-section-heading"><span class="dashicons dashicons-chart-bar"></span> <?php esc_html_e( 'Analytics scripts', 'digitizer-cookie-consent' ); ?></h3>
-		<table class="form-table dpt-form">
-			<tr>
-				<td>
-					<textarea name="dpt_cb[scripts_analytics]" rows="8" class="large-text code" dir="ltr" placeholder="<!-- Google Analytics / GTM -->"><?php echo esc_textarea( $o['scripts_analytics'] ); ?></textarea>
-					<p class="description"><?php esc_html_e( 'For example: Google Analytics 4, Google Tag Manager, Hotjar, Clarity.', 'digitizer-cookie-consent' ); ?></p>
-				</td>
-			</tr>
-		</table>
-
-		<h3 class="dpt-section-heading"><span class="dashicons dashicons-megaphone"></span> <?php esc_html_e( 'Marketing scripts', 'digitizer-cookie-consent' ); ?></h3>
-		<table class="form-table dpt-form">
-			<tr>
-				<td>
-					<textarea name="dpt_cb[scripts_marketing]" rows="8" class="large-text code" dir="ltr" placeholder="<!-- Facebook Pixel / Google Ads -->"><?php echo esc_textarea( $o['scripts_marketing'] ); ?></textarea>
-					<p class="description"><?php esc_html_e( 'For example: Facebook Pixel, Google Ads, TikTok Pixel, LinkedIn Insight.', 'digitizer-cookie-consent' ); ?></p>
-				</td>
-			</tr>
+			<?php endforeach; ?>
 		</table>
 		<?php
+	}
+
+	/**
+	 * The opening tag that makes a script wait for a category, without its
+	 * angle brackets (the screen prints them as entities).
+	 *
+	 * @param string $cat functional, analytics or marketing.
+	 * @return string
+	 */
+	public static function tag_example( $cat ) {
+		return 'script type="text/plain" data-dpt-cb-category="' . $cat . '"';
 	}
 
 	private function tab_floating( $o ) {
