@@ -661,7 +661,8 @@ class Digitizer_Cookie_Consent_Frontend {
 			$bg_image_css = sprintf(
 				'background-image:%s url(%s);background-size:%s;background-position:%s;background-repeat:%s;',
 				$ov_layer,
-				esc_url( $o['bg_image_url'] ),
+				// Unquoted url(): the characters it cannot hold are percent-encoded.
+				strtr( esc_url( str_replace( ' ', '%20', (string) $o['bg_image_url'] ) ), array( '(' => '%28', ')' => '%29', "'" => '%27', '"' => '%22' ) ),
 				esc_attr( $o['bg_image_size'] ),
 				esc_attr( $o['bg_image_position'] ),
 				esc_attr( $o['bg_image_repeat'] )

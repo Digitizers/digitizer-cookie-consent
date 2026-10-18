@@ -539,17 +539,45 @@ class Digitizer_Cookie_Consent_Settings {
 	 *
 	 * @return string
 	 */
+	/**
+	 * A family name as unquoted CSS: each word an identifier. A word that
+	 * starts with a digit ("Source Sans 3") or holds an ASCII character an
+	 * identifier cannot ("Font.Name") gets CSS hex escapes ("\\33 "), which
+	 * read the same as the quoted name.
+	 *
+	 * @param string $family One family name, without quotes.
+	 * @return string
+	 */
+	public static function css_family_name( $family ) {
+		$words = preg_split( '/\s+/u', trim( (string) $family ), -1, PREG_SPLIT_NO_EMPTY );
+		foreach ( $words as $w => $word ) {
+			$chars = preg_split( '//u', $word, -1, PREG_SPLIT_NO_EMPTY );
+			$out   = '';
+			foreach ( $chars as $i => $c ) {
+				$escape = 1 === strlen( $c ) && ! preg_match( '/[A-Za-z0-9_-]/', $c );
+				if ( ctype_digit( $c ) && ( 0 === $i || ( 1 === $i && '-' === $chars[0] ) ) ) {
+					$escape = true;
+				}
+				$out .= $escape ? '\\' . dechex( ord( $c ) ) . ' ' : $c;
+			}
+			$words[ $w ] = $out;
+		}
+		return implode( ' ', $words );
+	}
+
 	public static function font_family_css() {
 		$mode = (string) self::get( 'font_family' );
 
-		// Family names are printed unquoted: CSS reads "Open Sans" and
-		// Open Sans alike, and the value is escaped for output, which would
+		// Family names are printed unquoted, as CSS identifiers (see
+		// css_family_name()): the value is escaped for output, which would
 		// turn quotes into entities.
 		if ( 'custom' === $mode ) {
-			return str_replace( array( '"', "'" ), '', self::sanitize_font_family( self::get( 'font_family_custom' ) ) );
+			$stack = str_replace( array( '"', "'" ), '', self::sanitize_font_family( self::get( 'font_family_custom' ) ) );
+			$names = array_filter( array_map( 'trim', explode( ',', $stack ) ), 'strlen' );
+			return implode( ', ', array_map( array( __CLASS__, 'css_family_name' ), $names ) );
 		}
 		if ( 'elementor' === $mode ) {
-			$font = str_replace( array( '"', "'" ), '', self::elementor_primary_font() );
+			$font = self::css_family_name( str_replace( array( '"', "'" ), '', self::elementor_primary_font() ) );
 			// Keep a generic fallback, so a missing Elementor font degrades to
 			// the browser default rather than nothing.
 			return ( '' !== $font ) ? $font . ', sans-serif' : '';
