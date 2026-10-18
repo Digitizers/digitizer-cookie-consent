@@ -542,14 +542,17 @@ class Digitizer_Cookie_Consent_Settings {
 	public static function font_family_css() {
 		$mode = (string) self::get( 'font_family' );
 
+		// Family names are printed unquoted: CSS reads "Open Sans" and
+		// Open Sans alike, and the value is escaped for output, which would
+		// turn quotes into entities.
 		if ( 'custom' === $mode ) {
-			return self::sanitize_font_family( self::get( 'font_family_custom' ) );
+			return str_replace( array( '"', "'" ), '', self::sanitize_font_family( self::get( 'font_family_custom' ) ) );
 		}
 		if ( 'elementor' === $mode ) {
-			$font = self::elementor_primary_font();
-			// Quote the family name and keep a generic fallback, so a missing
-			// Elementor font degrades to the browser default rather than nothing.
-			return ( '' !== $font ) ? '"' . $font . '", sans-serif' : '';
+			$font = str_replace( array( '"', "'" ), '', self::elementor_primary_font() );
+			// Keep a generic fallback, so a missing Elementor font degrades to
+			// the browser default rather than nothing.
+			return ( '' !== $font ) ? $font . ', sans-serif' : '';
 		}
 		return ''; // inherit - emit no font-family at all.
 	}
@@ -880,7 +883,6 @@ class Digitizer_Cookie_Consent_Settings {
 		do_action( 'litespeed_purge_all' ); // LiteSpeed Cache (no-op when absent).
 		do_action( 'breeze_clear_all_cache' ); // Breeze (Cloudways), likewise.
 		do_action( 'digitizer_cookie_consent_purge_caches' ); // Custom hosts/CDNs can hook here.
-		do_action( 'dpt_cb_purge_caches' ); // The module's name, for site code written against it.
 	}
 
 	/**

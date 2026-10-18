@@ -29,7 +29,7 @@ class Digitizer_Cookie_Consent_Frontend {
 		add_filter( 'rocket_delay_js_exclusions',         array( $this, 'rocket_exclude_patterns' ) );
 		add_filter( 'rocket_minify_excluded_external_js', array( $this, 'rocket_exclude_files' ) );
 		add_filter( 'rocket_excluded_inline_js_content',  array( $this, 'rocket_exclude_inline' ) );
-		add_shortcode( 'dpt_cookie_settings', array( $this, 'settings_link_shortcode' ) );
+		add_shortcode( 'digitizer_cookie_consent_settings', array( $this, 'settings_link_shortcode' ) );
 
 		// The WP Consent API reads two things from the consent plugin: that one
 		// is registered, and which kind of consent it collects. Opt-in: nothing
@@ -195,7 +195,7 @@ class Digitizer_Cookie_Consent_Frontend {
 	}
 
 	/**
-	 * [dpt_cookie_settings text="..."] - a link that reopens the banner, for
+	 * [digitizer_cookie_consent_settings text="..."] - a link that reopens the banner, for
 	 * a footer or the privacy policy page. Without text it reads like the
 	 * floating button's label, in the page's language.
 	 *
@@ -206,7 +206,7 @@ class Digitizer_Cookie_Consent_Frontend {
 		if ( ! $this->is_active() ) {
 			return ''; // Nothing on the page for it to open.
 		}
-		$atts = shortcode_atts( array( 'text' => '' ), $atts, 'dpt_cookie_settings' );
+		$atts = shortcode_atts( array( 'text' => '' ), $atts, 'digitizer_cookie_consent_settings' );
 		$text = trim( (string) $atts['text'] );
 		if ( '' === $text ) {
 			$texts = Digitizer_Cookie_Consent_Settings::get_texts( $this->resolve_lang( Digitizer_Cookie_Consent_Settings::all() ) );
@@ -226,10 +226,7 @@ class Digitizer_Cookie_Consent_Frontend {
 		 *
 		 * @param string $selector Default Digitizer_Cookie_Consent_Frontend::OPEN_SELECTOR.
 		 */
-		$selector = (string) apply_filters( 'digitizer_cookie_consent_open_selector', self::OPEN_SELECTOR );
-		// The module's filter name, so site code written against Digitizer
-		// Pro Tools keeps its way to reopen the banner.
-		return trim( (string) apply_filters( 'dpt_cb_open_selector', $selector ) );
+		return trim( (string) apply_filters( 'digitizer_cookie_consent_open_selector', self::OPEN_SELECTOR ) );
 	}
 
 	public function rocket_exclude_files( $excluded ) {
@@ -286,7 +283,6 @@ class Digitizer_Cookie_Consent_Frontend {
 	 */
 	public function lang_dir( $lang ) {
 		$rtl   = apply_filters( 'digitizer_cookie_consent_rtl_langs', array( 'he', 'ar', 'fa', 'ur', 'yi' ) );
-		$rtl   = apply_filters( 'dpt_cb_rtl_langs', $rtl ); // The module's name, for existing site code.
 		$short = strtolower( substr( $lang, 0, (int) strcspn( $lang, '_-' ) ) );
 		return in_array( $short, $rtl, true ) ? 'rtl' : 'ltr';
 	}
@@ -392,7 +388,7 @@ class Digitizer_Cookie_Consent_Frontend {
 			<?php endif; ?>
 			try {
 				var EXPECTED_V = <?php echo wp_json_encode( $version ); ?>;
-				var MAX_AGE_MS = <?php echo (int) $days; ?> * 864e5;
+				var MAX_AGE_MS = <?php echo absint( $days ); ?> * 864e5;
 				// Each store is checked on its own, as frontend.js does: a broken
 				// or stale cookie must not hide a valid localStorage copy.
 				var valid = function (raw) {
@@ -438,7 +434,7 @@ class Digitizer_Cookie_Consent_Frontend {
 		// banner in the footer.
 		wp_register_style( 'digitizer-cookie-consent-precheck', false, array(), DIGITIZER_COOKIE_CONSENT_VERSION );
 		wp_enqueue_style( 'digitizer-cookie-consent-precheck' );
-		wp_add_inline_style( 'digitizer-cookie-consent-precheck', self::precheck_css() );
+		wp_add_inline_style( 'digitizer-cookie-consent-precheck', wp_strip_all_tags( self::precheck_css() ) );
 
 		// First in <head>. data-no-defer and data-cfasync="false" keep WP
 		// Rocket and Cloudflare Rocket Loader from deferring it: it must run
@@ -507,7 +503,7 @@ class Digitizer_Cookie_Consent_Frontend {
 		}
 		$base = DIGITIZER_COOKIE_CONSENT_URL . 'assets/';
 		wp_enqueue_style(  'digitizer-cookie-consent', $base . 'css/frontend.css', array(), DIGITIZER_COOKIE_CONSENT_VERSION );
-		wp_add_inline_style( 'digitizer-cookie-consent', $this->design_css( Digitizer_Cookie_Consent_Settings::all() ) );
+		wp_add_inline_style( 'digitizer-cookie-consent', wp_strip_all_tags( $this->design_css( Digitizer_Cookie_Consent_Settings::all() ) ) );
 		// After the WP Consent API's script when it is in use, so the banner
 		// corrects any stale state before plugins reading the API run. Only
 		// when the API is really here: a missing dependency would drop the
@@ -663,7 +659,7 @@ class Digitizer_Cookie_Consent_Frontend {
 				$ov_layer = "linear-gradient({$rgba},{$rgba}),";
 			}
 			$bg_image_css = sprintf(
-				"background-image:%s url('%s');background-size:%s;background-position:%s;background-repeat:%s;",
+				'background-image:%s url(%s);background-size:%s;background-position:%s;background-repeat:%s;',
 				$ov_layer,
 				esc_url( $o['bg_image_url'] ),
 				esc_attr( $o['bg_image_size'] ),
@@ -742,21 +738,12 @@ class Digitizer_Cookie_Consent_Frontend {
 		?>
 		<?php
 		/*
-		 * Everything printed between here and </style> is CSS, not HTML: each
-		 * value is either int-cast, run through esc_attr() where it was
-		 * assigned above, or built by a helper that only emits allowlisted
-		 * keywords (see Digitizer_Cookie_Consent_Settings::css_value_allowlists() and
-		 * sanitize_font_family()).
-		 *
-		 * HTML escaping at the echo site would be wrong here, not merely
-		 * redundant: the content of a style element is raw text, so a
-		 * browser never decodes entities inside it - esc_attr() would turn a
-		 * font stack like "Open Sans", sans-serif into &quot;Open Sans&quot;
-		 * and break the declaration.
-		 *
-		 * Anything added to this block must keep that contract.
+		 * Everything printed here is CSS. Each value is escaped where it is
+		 * printed: absint() for numbers, esc_attr() for the rest. No value
+		 * holds a quote (family names and the image URL are printed
+		 * unquoted), so escaping leaves the CSS as it reads. The whole block
+		 * then goes to wp_add_inline_style() through wp_strip_all_tags().
 		 */
-		// phpcs:disable WordPress.Security.EscapeOutput.OutputNotEscaped -- CSS context; values sanitized at assignment, see above.
 		?>
 			#dpt-cb-overlay { background: <?php echo esc_attr( $overlay_rgba ); ?>; }
 			<?php if ( '' !== $font_family ) : ?>
@@ -770,58 +757,58 @@ class Digitizer_Cookie_Consent_Frontend {
 			   this exact font. */
 			#dpt-cb-banner, #dpt-cb-banner *,
 			#dpt-cb-float-button, #dpt-cb-float-button * {
-				font-family: <?php echo $font_family; // Already sanitized to a bare font stack. ?> !important;
+				font-family: <?php echo esc_attr( $font_family ); ?> !important;
 			}
 			<?php endif; ?>
 			#dpt-cb-banner .dpt-cb-box {
 				background-color: <?php echo esc_attr( $o['bg_color'] ); ?>;
-				color: <?php echo $text_color; ?>;
-				max-width: <?php echo (int) $o['width']; ?>px;
-				border-radius: <?php echo (int) $o['border_radius']; ?>px;
-				padding: <?php echo (int) $o['padding']; ?>px;
-				width: <?php echo (int) $o['max_width_pct']; ?>%;
-				<?php echo $bg_image_css; ?>
-				<?php echo $border_css; ?>
-				<?php echo $box_shadow_css; ?>
+				color: <?php echo esc_attr( $text_color ); ?>;
+				max-width: <?php echo absint( $o['width'] ); ?>px;
+				border-radius: <?php echo absint( $o['border_radius'] ); ?>px;
+				padding: <?php echo absint( $o['padding'] ); ?>px;
+				width: <?php echo absint( $o['max_width_pct'] ); ?>%;
+				<?php echo esc_attr( $bg_image_css ); ?>
+				<?php echo esc_attr( $border_css ); ?>
+				<?php echo esc_attr( $box_shadow_css ); ?>
 			}
 			/* Authoritative desktop sizing for the active position. Needed
 			   because frontend.css pins the corner box to a fixed 380px with
 			   !important, which would otherwise ignore the width setting. */
-			<?php echo $pos_sel; ?> {
+			<?php echo esc_attr( $pos_sel ); ?> {
 			<?php if ( $is_corner ) : ?>
 				/* A corner banner is shrink-to-fit (only bottom/left|right are
 				   set), so a percentage width has nothing to resolve against -
 				   it takes its own explicit pixel width, capped to the viewport.
 				   Kept separate from the width/percentage pair so switching
 				   positions does not overwrite either setting. */
-				width: <?php echo (int) $o['width_corner']; ?>px !important;
+				width: <?php echo absint( $o['width_corner'] ); ?>px !important;
 				max-width: 95vw !important;
 			<?php else : ?>
-				max-width: <?php echo (int) $o['width']; ?>px !important;
-				width: <?php echo (int) $o['max_width_pct']; ?>% !important;
+				max-width: <?php echo absint( $o['width'] ); ?>px !important;
+				width: <?php echo absint( $o['max_width_pct'] ); ?>% !important;
 			<?php endif; ?>
 			}
 			#dpt-cb-banner .dpt-cb-title {
-				color: <?php echo $title_color; ?>;
-				font-size: <?php echo $title_size; ?>px;
-				text-align: <?php echo $title_align; ?>;
-				font-weight: <?php echo $title_weight; ?>;
-				margin: 0 0 <?php echo $title_mb; ?>px;
-				<?php echo $title_shadow; ?>
+				color: <?php echo esc_attr( $title_color ); ?>;
+				font-size: <?php echo esc_attr( $title_size ); ?>px;
+				text-align: <?php echo esc_attr( $title_align ); ?>;
+				font-weight: <?php echo esc_attr( $title_weight ); ?>;
+				margin: 0 0 <?php echo esc_attr( $title_mb ); ?>px;
+				<?php echo esc_attr( $title_shadow ); ?>
 			}
 			#dpt-cb-banner .dpt-cb-message {
-				color: <?php echo $content_color; ?>;
-				font-size: <?php echo $content_size; ?>px;
-				text-align: <?php echo $content_align; ?>;
-				<?php echo $content_shadow; ?>
+				color: <?php echo esc_attr( $content_color ); ?>;
+				font-size: <?php echo esc_attr( $content_size ); ?>px;
+				text-align: <?php echo esc_attr( $content_align ); ?>;
+				<?php echo esc_attr( $content_shadow ); ?>
 			}
 			#dpt-cb-banner .dpt-cb-close {
-				color: <?php echo $close_color; ?>;
-				font-size: <?php echo $close_size; ?>px;
-				width: <?php echo $close_box; ?>px;
-				height: <?php echo $close_box; ?>px;
-				opacity: <?php echo $close_alpha; ?>;
-				<?php echo $close_bg_css; ?>
+				color: <?php echo esc_attr( $close_color ); ?>;
+				font-size: <?php echo esc_attr( $close_size ); ?>px;
+				width: <?php echo esc_attr( $close_box ); ?>px;
+				height: <?php echo esc_attr( $close_box ); ?>px;
+				opacity: <?php echo esc_attr( $close_alpha ); ?>;
+				<?php echo esc_attr( $close_bg_css ); ?>
 			}
 			<?php if ( $close_clear > 0 ) : ?>
 			/* No title shown: the close button sits where the message begins.
@@ -834,8 +821,8 @@ class Digitizer_Cookie_Consent_Frontend {
 			#dpt-cb-banner .dpt-cb-close + .dpt-cb-main-view > .dpt-cb-message:first-child::before {
 				content: "";
 				float: right;
-				width: <?php echo $close_clear + 4; ?>px;
-				height: <?php echo $close_clear; ?>px;
+				width: <?php echo esc_attr( $close_clear + 4 ); ?>px;
+				height: <?php echo esc_attr( $close_clear ); ?>px;
 			}
 			#dpt-cb-banner[dir="rtl"] .dpt-cb-close + .dpt-cb-main-view > .dpt-cb-title.dpt-cb-sr-only + .dpt-cb-message::before,
 			#dpt-cb-banner[dir="rtl"] .dpt-cb-close + .dpt-cb-main-view > .dpt-cb-message:first-child::before {
@@ -845,17 +832,17 @@ class Digitizer_Cookie_Consent_Frontend {
 			<?php if ( '' !== $policy_link_color ) : ?>
 			#dpt-cb-banner .dpt-cb-policy a,
 			#dpt-cb-banner .dpt-cb-policy-inline a {
-				color: <?php echo $policy_link_color; ?>;
+				color: <?php echo esc_attr( $policy_link_color ); ?>;
 				opacity: 1;
 			}
 			<?php endif; ?>
 			/* Same selector as frontend.css's base button rule, later in the
 			   page, so these win without !important. */
 			#dpt-cb-banner .dpt-cb-btn {
-				font-size: <?php echo $btn_font_size; ?>px;
-				font-weight: <?php echo $btn_font_weight; ?>;
+				font-size: <?php echo esc_attr( $btn_font_size ); ?>px;
+				font-weight: <?php echo esc_attr( $btn_font_weight ); ?>;
 				<?php if ( $btn_height > 0 ) : ?>
-				min-height: <?php echo $btn_height; ?>px;
+				min-height: <?php echo esc_attr( $btn_height ); ?>px;
 				<?php endif; ?>
 			}
 			<?php if ( '1' === $o['btn_stretch'] ) : ?>
@@ -871,44 +858,44 @@ class Digitizer_Cookie_Consent_Frontend {
 			/* Desktop only: below 640px frontend.css spreads the corner banner
 			   across the screen, and that layout keeps its own spacing. */
 			@media (min-width: 641px) {
-				<?php echo $banner_sel; ?> {
-					<?php echo $corner_side; ?>: <?php echo $corner_x; ?>px;
-					bottom: <?php echo $corner_y; ?>px;
+				<?php echo esc_attr( $banner_sel ); ?> {
+					<?php echo esc_attr( $corner_side ); ?>: <?php echo esc_attr( $corner_x ); ?>px;
+					bottom: <?php echo esc_attr( $corner_y ); ?>px;
 				}
 			}
 			<?php endif; ?>
 			#dpt-cb-banner .dpt-cb-btn-accept {
 				background: <?php echo esc_attr( $o['btn_accept_bg'] ); ?>;
 				color: <?php echo esc_attr( $o['btn_accept_color'] ); ?>;
-				border-radius: <?php echo (int) $o['btn_accept_radius']; ?>px;
+				border-radius: <?php echo absint( $o['btn_accept_radius'] ); ?>px;
 				border: 0;
 			}
 			#dpt-cb-banner .dpt-cb-btn-accept:hover { background: <?php echo esc_attr( $o['btn_accept_hover_bg'] ); ?>; }
 			#dpt-cb-banner .dpt-cb-btn-reject {
 				background: <?php echo esc_attr( $o['btn_reject_bg'] ); ?>;
 				color: <?php echo esc_attr( $o['btn_reject_color'] ); ?>;
-				border-radius: <?php echo (int) $o['btn_reject_radius']; ?>px;
+				border-radius: <?php echo absint( $o['btn_reject_radius'] ); ?>px;
 				border: 0;
 			}
 			#dpt-cb-banner .dpt-cb-btn-reject:hover { background: <?php echo esc_attr( $o['btn_reject_hover_bg'] ); ?>; }
 			#dpt-cb-banner .dpt-cb-btn-settings {
 				background: <?php echo esc_attr( $o['btn_settings_bg'] ); ?>;
 				color: <?php echo esc_attr( $o['btn_settings_color'] ); ?>;
-				border-radius: <?php echo (int) $o['btn_settings_radius']; ?>px;
-				<?php echo $btn_settings_border; ?>
+				border-radius: <?php echo absint( $o['btn_settings_radius'] ); ?>px;
+				<?php echo esc_attr( $btn_settings_border ); ?>
 			}
 			#dpt-cb-banner .dpt-cb-btn-save {
 				background: <?php echo esc_attr( $o['btn_save_bg'] ); ?>;
 				color: <?php echo esc_attr( $o['btn_save_color'] ); ?>;
-				border-radius: <?php echo (int) $o['btn_save_radius']; ?>px;
+				border-radius: <?php echo absint( $o['btn_save_radius'] ); ?>px;
 				border: 0;
 			}
 			#dpt-cb-float-button {
 				background: <?php echo esc_attr( $o['float_button_bg'] ); ?>;
 				color: <?php echo esc_attr( $o['float_button_color'] ); ?>;
-				width: <?php echo $fb_size_d; ?>px;
-				height: <?php echo $fb_size_d; ?>px;
-				<?php echo $fb_pos_d; ?>
+				width: <?php echo esc_attr( $fb_size_d ); ?>px;
+				height: <?php echo esc_attr( $fb_size_d ); ?>px;
+				<?php echo esc_attr( $fb_pos_d ); ?>
 			}
 			@media (max-width: 640px) {
 				/* Same selector shape and !important as the position rules in
@@ -916,9 +903,9 @@ class Digitizer_Cookie_Consent_Frontend {
 				   configured mobile size wins on later source order. On mobile
 				   the corner banner is stretched to left/right:10px, so it is no
 				   longer shrink-to-fit and a percentage width resolves normally. */
-				<?php echo $pos_sel; ?> {
-					max-width: <?php echo (int) $o['width_mobile']; ?>px !important;
-					width: <?php echo (int) $o['max_width_pct_mobile']; ?>% !important;
+				<?php echo esc_attr( $pos_sel ); ?> {
+					max-width: <?php echo absint( $o['width_mobile'] ); ?>px !important;
+					width: <?php echo absint( $o['max_width_pct_mobile'] ); ?>% !important;
 					/* frontend.css stretches the mobile container to
 					   left:10px/right:10px, so a box narrower than 100% would
 					   sit against its left edge - a bottom-right banner would
@@ -926,35 +913,34 @@ class Digitizer_Cookie_Consent_Frontend {
 					   Keep the box on the side its position names. Physical
 					   margins on purpose: the position names are physical, so
 					   they must not flip with the RTL/LTR text direction. */
-					margin-left: <?php echo $mobile_margins[0]; ?> !important;
-					margin-right: <?php echo $mobile_margins[1]; ?> !important;
+					margin-left: <?php echo esc_attr( $mobile_margins[0] ); ?> !important;
+					margin-right: <?php echo esc_attr( $mobile_margins[1] ); ?> !important;
 				}
 				<?php if ( '' !== $full_width_edge ) : ?>
 				/* "Full-width bar on mobile": flush with the screen edge, no
 				   margin, and rounded only on the edge facing the page if at
 				   all. After the sizing rule above, with the same selector and
 				   !important, so it wins. */
-				<?php echo $banner_sel; ?> {
+				<?php echo esc_attr( $banner_sel ); ?> {
 					left: 0 !important;
 					right: 0 !important;
-					<?php echo $full_width_edge; ?>: 0 !important;
+					<?php echo esc_attr( $full_width_edge ); ?>: 0 !important;
 				}
-				<?php echo $pos_sel; ?> {
+				<?php echo esc_attr( $pos_sel ); ?> {
 					width: 100% !important;
 					max-width: 100% !important;
 					margin-left: 0 !important;
 					margin-right: 0 !important;
-					border-radius: <?php echo $full_width_radius; ?> !important;
+					border-radius: <?php echo esc_attr( $full_width_radius ); ?> !important;
 				}
 				<?php endif; ?>
 				#dpt-cb-float-button {
-					width: <?php echo $fb_size_m; ?>px !important;
-					height: <?php echo $fb_size_m; ?>px !important;
-					<?php echo $fb_pos_m; ?>
+					width: <?php echo esc_attr( $fb_size_m ); ?>px !important;
+					height: <?php echo esc_attr( $fb_size_m ); ?>px !important;
+					<?php echo esc_attr( $fb_pos_m ); ?>
 				}
 			}
 		<?php
-		// phpcs:enable WordPress.Security.EscapeOutput.OutputNotEscaped
 		return (string) ob_get_clean();
 	}
 
@@ -1087,6 +1073,25 @@ class Digitizer_Cookie_Consent_Frontend {
 	 * Inline SVG icon (stroke follows the text color). Self-contained -
 	 * no icon font or Elementor dependency.
 	 */
+	/**
+	 * The tags and attributes the built-in icons use, for wp_kses().
+	 *
+	 * @return array
+	 */
+	public static function svg_allowed_html() {
+		$shape = array( 'd' => true, 'x' => true, 'y' => true, 'x1' => true, 'y1' => true, 'x2' => true, 'y2' => true, 'width' => true, 'height' => true, 'rx' => true, 'ry' => true );
+		return array(
+			'svg'  => array(
+				'class' => true, 'xmlns' => true, 'viewbox' => true, 'width' => true, 'height' => true, 'fill' => true,
+				'stroke' => true, 'stroke-width' => true, 'stroke-linecap' => true, 'stroke-linejoin' => true,
+				'aria-hidden' => true, 'focusable' => true,
+			),
+			'path' => $shape,
+			'line' => $shape,
+			'rect' => $shape,
+		);
+	}
+
 	private function icon( $name ) {
 		$attrs = 'class="dpt-cb-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"';
 		$icons = array(
@@ -1107,7 +1112,7 @@ class Digitizer_Cookie_Consent_Frontend {
 	 * @param string $name Icon key.
 	 */
 	private function print_icon( $name ) {
-		echo $this->icon( $name ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Hardcoded SVG from the map in icon().
+		echo wp_kses( $this->icon( $name ), self::svg_allowed_html() );
 	}
 
 	private function render_banner_markup( $o, $t, $lang, $dir ) {
@@ -1142,8 +1147,7 @@ class Digitizer_Cookie_Consent_Frontend {
 		     role="dialog" aria-labelledby="dpt-cb-title">
 			<div class="dpt-cb-box">
 				<?php if ( '1' === $o['show_close'] ) : ?>
-					<?php // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Fixed markup from close_glyph(). ?>
-					<button type="button" class="dpt-cb-close" data-dpt-cb-action="reject" aria-label="<?php echo esc_attr( $t['close_aria'] ); ?>"><?php echo self::close_glyph( $o['close_icon'] ); ?></button>
+					<button type="button" class="dpt-cb-close" data-dpt-cb-action="reject" aria-label="<?php echo esc_attr( $t['close_aria'] ); ?>"><?php echo wp_kses( self::close_glyph( $o['close_icon'] ), self::svg_allowed_html() ); ?></button>
 				<?php endif; ?>
 
 				<div class="dpt-cb-main-view">
@@ -1152,8 +1156,7 @@ class Digitizer_Cookie_Consent_Frontend {
 						<h2 id="dpt-cb-title" class="dpt-cb-title<?php echo '1' === $o['title_show'] ? '' : ' dpt-cb-sr-only'; ?>"><?php echo esc_html( $t['title'] ); ?></h2>
 					<?php endif; ?>
 					<?php
-					// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Built from wp_kses_post(), esc_url() and esc_html() in message_html().
-					echo self::message_html( $t['message'], $this->resolve_policy_link( $o ), $t['policy_text'], '1' === $o['policy_inline'] );
+					echo wp_kses_post( self::message_html( $t['message'], $this->resolve_policy_link( $o ), $t['policy_text'], '1' === $o['policy_inline'] ) );
 					?>
 
 					<div class="dpt-cb-buttons">

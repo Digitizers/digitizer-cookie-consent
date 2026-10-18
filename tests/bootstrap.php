@@ -1410,3 +1410,24 @@ if ( ! function_exists( 'selected' ) ) { function selected( $a, $b = true, $echo
 if ( ! function_exists( 'esc_textarea' ) ) { function esc_textarea( $t ) { return htmlspecialchars( (string) $t, ENT_QUOTES, 'UTF-8' ); } }
 if ( ! function_exists( 'esc_attr_e' ) ) { function esc_attr_e( $t, $d = null ) { echo esc_attr( $t ); } }
 if ( ! function_exists( 'wp_nonce_field' ) ) { function wp_nonce_field( $a = -1 ) { echo '<input type="hidden" name="_wpnonce" value="n" />'; } }
+
+if ( ! function_exists( 'wp_kses' ) ) {
+	/** Keeps allowlisted tags with allowlisted attributes, drops other tags (their text stays). */
+	function wp_kses( $html, $allowed ) {
+		return preg_replace_callback(
+			'#<(/?)([a-zA-Z0-9]+)([^>]*)>#',
+			function ( $m ) use ( $allowed ) {
+				$tag = strtolower( $m[2] );
+				if ( ! isset( $allowed[ $tag ] ) ) { return ''; }
+				if ( '/' === $m[1] ) { return '</' . $m[2] . '>'; }
+				preg_match_all( '#([a-zA-Z:-]+)="([^"]*)"#', $m[3], $attrs, PREG_SET_ORDER );
+				$keep = '';
+				foreach ( $attrs as $a ) {
+					if ( isset( $allowed[ $tag ][ strtolower( $a[1] ) ] ) ) { $keep .= ' ' . $a[1] . '="' . $a[2] . '"'; }
+				}
+				return '<' . $m[2] . $keep . '>';
+			},
+			(string) $html
+		);
+	}
+}
