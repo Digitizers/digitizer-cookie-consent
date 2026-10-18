@@ -65,11 +65,13 @@ $GLOBALS['dpt_stub_options']['digitizer_cookie_consent']['credit'] = '1';
 ob_start(); $m->invoke( $f, Digitizer_Cookie_Consent_Settings::all(), Digitizer_Cookie_Consent_Settings::get_texts( 'en' ), 'en', 'ltr' ); $html = (string) ob_get_clean();
 dpt_test_ok( 1 === preg_match( '#<p class="dpt-cb-credit"><a href="https://www\.digitizer\.studio" target="_blank" rel="noopener">Cookie consent by Digitizer</a></p>#', $html ), 'switched on: one line under the buttons' );
 
-/* The module's hooks still reach site code written against them. */
-add_filter( 'dpt_cb_open_selector', function ( $sel ) { return $sel . ', .legacy-open'; } );
-dpt_test_ok( '.legacy-open' === substr( Digitizer_Cookie_Consent_Frontend::open_selector(), -12 ), 'a callback on dpt_cb_open_selector still changes what reopens the banner' );
-add_filter( 'dpt_cb_rtl_langs', function ( $langs ) { $langs[] = 'ckb'; return $langs; } );
-dpt_test_eq( $f->lang_dir( 'ckb' ), 'rtl', 'and one on dpt_cb_rtl_langs still adds an RTL language' );
+/* Every hook and the shortcode carry the plugin's full prefix (wp.org: no prefix under 5 characters). Digitizer Pro Tools bridges its old names. */
+$src = '';
+foreach ( glob( dirname( __DIR__ ) . '/includes/*.php' ) as $file ) { $src .= (string) file_get_contents( $file ); }
+preg_match_all( "/(?:apply_filters|do_action|add_shortcode|add_filter|add_action)\\(\\s*'(?!digitizer_cookie_consent_|digitizer_cc_|admin_|wp_|plugins_|init|plugin_action_links_|template_redirect|rocket_|litespeed_|sgo_|autoptimize_|wpo_|cfturnstile|wp-consent|cmplz|wpml_|breeze_)([a-z0-9_]+)'/", $src, $short );
+dpt_test_eq( array_values( array_unique( $short[1] ) ), array(), 'no hook or shortcode of the plugin\'s own uses a short prefix' );
+add_filter( 'digitizer_cookie_consent_rtl_langs', function ( $langs ) { $langs[] = 'ckb'; return $langs; } );
+dpt_test_eq( $f->lang_dir( 'ckb' ), 'rtl', 'digitizer_cookie_consent_rtl_langs adds an RTL language' );
 $GLOBALS['dpt_stub_filters'] = array();
 
 /* A deliberate 900px / 95% box survives activation running the defaults again. */

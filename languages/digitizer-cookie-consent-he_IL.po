@@ -1045,7 +1045,7 @@ msgstr "מתעדכן לאחר שמירה."
 msgid "View banner on the site"
 msgstr "צפייה בבאנר באתר"
 
-#: includes/class-digitizer-cookie-consent-frontend.php:1170
+#: includes/class-digitizer-cookie-consent-frontend.php:1174
 msgid "Cookie consent by Digitizer"
 msgstr "הסכמה לעוגיות מבית דיגיטייזר"
 

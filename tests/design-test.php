@@ -262,7 +262,7 @@ add_filter( 'digitizer_cookie_consent_open_selector', function ( $s ) { return $
 dpt_test_ok( '.footer-cookies' === substr( Digitizer_Cookie_Consent_Frontend::open_selector(), -15 ), 'a site can add its own' );
 $GLOBALS['dpt_stub_filters'] = array();
 
-dpt_test_ok( isset( $GLOBALS['dpt_stub_shortcodes']['dpt_cookie_settings'] ), 'the shortcode is registered' );
+dpt_test_ok( isset( $GLOBALS['dpt_stub_shortcodes']['digitizer_cookie_consent_settings'] ) && ! isset( $GLOBALS['dpt_stub_shortcodes']['dpt_cookie_settings'] ), 'the shortcode is registered under the plugin\'s prefix' );
 $GLOBALS['dpt_stub_is_admin'] = false; // A page on the site.
 dpt_test_cb_opts( array( 'enabled' => '1' ) );
 dpt_test_eq( $frontend->settings_link_shortcode( array( 'text' => 'Cookie <b>settings</b>' ) ), '<a href="#dpt-cookie-settings" class="dpt-cb-settings-link">Cookie &lt;b&gt;settings&lt;/b&gt;</a>', 'it prints a link to the hash, the text escaped' );

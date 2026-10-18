@@ -21,7 +21,7 @@ Digitizer Cookie Consent shows a cookie consent banner, holds back the scripts y
 * Google Consent Mode v2: the defaults are set first in the page head, before any Google tag, and updated from the visitor's choice.
 * The WP Consent API: plugins that read it, such as Site Kit and WooCommerce order attribution, follow the visitor's choice.
 * When a visitor refuses or withdraws a category, the cookies you list for it are deleted from the browser, and again on every page while it stays refused.
-* A link anywhere on the site reopens the banner: any link to #dpt-cookie-settings, an element with the class dpt-cb-open, or the [dpt_cookie_settings] shortcode. A floating button does the same.
+* A link anywhere on the site reopens the banner: any link to #dpt-cookie-settings, an element with the class dpt-cb-open, or the [digitizer_cookie_consent_settings] shortcode. A floating button does the same.
 * Cache-proof: the banner is rendered hidden and a small script in the head decides whether to show it, so a page cache or CDN never shows it to a visitor who has already answered. Built-in compatibility with WP Rocket and Cloudflare Rocket Loader.
 
 **Built for Hebrew and multilingual sites**
@@ -70,7 +70,7 @@ Only the site's own cookies that scripts can read. Cookies set on other domains 
 
 = How do I add a "cookie settings" link to my footer? =
 
-Link to #dpt-cookie-settings, give any element the class dpt-cb-open, or use the [dpt_cookie_settings] shortcode.
+Link to #dpt-cookie-settings, give any element the class dpt-cb-open, or use the [digitizer_cookie_consent_settings] shortcode.
 
 = Does a choice carry over to my other subdomains? =
 
