@@ -55,6 +55,9 @@ dpt_test_ok( false === strpos( $scripts_tab, '<textarea' ) && false !== strpos( 
 $src = (string) file_get_contents( dirname( __DIR__ ) . '/includes/class-digitizer-cookie-consent-admin.php' );
 dpt_test_ok( false === strpos( $src, 'scripts_functional' ) && false === strpos( $src, 'block_scripts' ) && false === stripos( $src, '<script' ), 'the screen has no snippet fields, and no literal script tag' );
 
+preg_match_all( "/esc_html_e\\( '([^']*(?:\\\\'[^']*)*)'/", $src, $strings );
+dpt_test_eq( preg_grep( '/past(e|ed|ing)\\b/i', $strings[1] ), array(), 'no text on the screen speaks of pasting code: the plugin stores none' );
+
 /* A site that moved from Digitizer Pro Tools with pasted snippets: shown them, read-only, until it says they are moved. */
 $moved = function () use ( $admin ) { ob_start(); $admin->moved_scripts_notice(); return (string) ob_get_clean(); };
 $GLOBALS['dpt_stub_options'] = array(

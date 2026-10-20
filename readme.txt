@@ -4,7 +4,7 @@ Tags: cookies, consent, privacy, gdpr, cookie banner
 Requires at least: 5.7
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -81,8 +81,14 @@ Yes, by default: the choice is stored on the parent domain, so www, the bare dom
 1. The banner in Hebrew, in the corner of the page.
 2. The banner in English, as a bar along the bottom.
 3. The preferences view: a switch per category.
+4. The settings screen, under Settings > Cookie Consent, with a live preview of the banner.
 
 == Changelog ==
+
+= 1.0.1 =
+* A tall banner - long texts, or the preferences list on a short or landscape screen - stays on screen and scrolls inside itself.
+* A focused switch on the settings screen shows a focus ring.
+* The Consent Mode description no longer speaks of pasted scripts: it explains tagged ones.
 
 = 1.0.0 =
 * First release on WordPress.org, from the Cookie Banner module of Digitizer Pro Tools 1.46.1.
