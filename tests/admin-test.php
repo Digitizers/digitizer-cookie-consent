@@ -42,6 +42,7 @@ dpt_test_ok( false !== strpos( $js, '.dpt-switch input[type="checkbox"]' ) && fa
 dpt_test_ok( false !== strpos( $js, "'.dpt-color'" ) && false !== strpos( $js, 'wpColorPicker' ), 'admin.js starts the color pickers' );
 dpt_test_ok( false !== strpos( $js, 'wp.media' ) && false !== strpos( $js, 'bg_image_url' ), 'and the background image picker' );
 $css = (string) file_get_contents( dirname( __DIR__ ) . '/assets/css/admin.css' );
+dpt_test_ok( 1 === preg_match( '/\.dpt-switch input:focus-visible \+ \.dpt-switch-slider\s*\{[^}]*outline:/', $css ), 'a focused settings switch shows a focus ring' );
 foreach ( array( '.dpt-layout', '.dpt-panel', '.dpt-form', '.dpt-actions', '.dpt-image-picker', '.dpt-lang-manager', '.dpt-sidebar', '.dpt-switch', '.dpt-preview-box' ) as $sel ) {
 	dpt_test_ok( false !== strpos( $css, $sel ), "admin.css carries $sel" );
 }

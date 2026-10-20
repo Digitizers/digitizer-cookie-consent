@@ -32,6 +32,13 @@ $css = ( new Digitizer_Cookie_Consent_Frontend() )->design_css( Digitizer_Cookie
 dpt_test_ok( false !== strpos( $css, 'font-family: Source Sans \\33 , Noto \\32 B Sans, sans-serif !important;' ), 'a word that starts with a digit is escaped as a CSS identifier, so the family stays valid unquoted' );
 dpt_test_ok( false !== strpos( $css, 'url(https://example.test/uploads/banner%281%29%20x.jpg)' ), 'parentheses and spaces in the image URL are percent-encoded, so it stays a valid unquoted url()' );
 
+/* A tall banner (long texts, the preferences list) stays on a short screen: the box scrolls inside the viewport. */
+$fcss = (string) file_get_contents( dirname( __DIR__ ) . '/assets/css/frontend.css' );
+dpt_test_ok( 1 === preg_match( '/#dpt-cb-banner \.dpt-cb-box \{[^}]*max-height: calc\(100dvh - 40px\);[^}]*overflow-y: auto;/', $fcss ), 'the box is held to the viewport and scrolls inside it' );
+$GLOBALS['dpt_stub_options']['digitizer_cookie_consent'] = array_merge( $o, array( 'position' => 'bottom-right', 'corner_offset_y' => '60' ) );
+$css = ( new Digitizer_Cookie_Consent_Frontend() )->design_css( Digitizer_Cookie_Consent_Settings::all() );
+dpt_test_ok( false !== strpos( $css, 'max-height: calc(100dvh - 80px);' ), 'a corner box raised from the bottom leaves room for its offset' );
+
 $all = '';
 foreach ( glob( dirname( __DIR__ ) . '/includes/*.php' ) as $file ) { $all .= (string) file_get_contents( $file ); }
 dpt_test_eq( substr_count( $all, 'EscapeOutput.OutputNotEscaped' ), 0, 'no output is waved through with a phpcs:ignore: everything printed is escaped' );
