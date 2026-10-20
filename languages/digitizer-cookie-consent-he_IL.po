@@ -2,7 +2,7 @@
 # This file is distributed under the GPLv2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Digitizer Cookie Consent 1.0.0\n"
+"Project-Id-Version: Digitizer Cookie Consent 1.0.1\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/digitizer-cookie-consent\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -208,8 +208,8 @@ msgid "Tells Google tags (Analytics, Ads, Tag Manager) what the visitor allowed:
 msgstr "מודיע לתגיות של Google ‏(Analytics, ‏Ads, ‏Tag Manager) מה המבקר אישר: אנליטיקה מאשרת analytics storage, שיווק מאשר ad storage, ‏ad user data ו-ad personalization, ופונקציונליות מאשרת personalization storage. אלה מתחילים כמסורבים עד שהמבקר בוחר; functionality storage ו-security storage, הסוג ההכרחי, מאושרים תמיד."
 
 #: includes/class-digitizer-cookie-consent-admin.php:482
-msgid "Google tags pasted in the \"Scripts\" tab still load only after consent. Google tags added any other way (Site Kit, a GTM plugin, the theme) load at once and follow these signals."
-msgstr "תגיות Google שהודבקו בטאב \"סקריפטים\" עדיין נטענות רק אחרי הסכמה. תגיות Google שנוספו בכל דרך אחרת (Site Kit, תוסף GTM, ערכת העיצוב) נטענות מיד ופועלות לפי האותות האלה."
+msgid "A Google tag tagged with a category (see the \"Scripts\" tab) still runs only after consent. Untagged Google tags (Site Kit, a GTM plugin, the theme) load at once and follow these signals."
+msgstr "תגית Google שתויגה בקטגוריה (ראו טאב \"סקריפטים\") עדיין רצה רק אחרי הסכמה. תגיות Google לא מתויגות (Site Kit, תוסף GTM, ערכת העיצוב) נטענות מיד ופועלות לפי האותות האלה."
 
 #: includes/class-digitizer-cookie-consent-admin.php:486
 msgid "WP Consent API"
@@ -1045,7 +1045,7 @@ msgstr "מתעדכן לאחר שמירה."
 msgid "View banner on the site"
 msgstr "צפייה בבאנר באתר"
 
-#: includes/class-digitizer-cookie-consent-frontend.php:1174
+#: includes/class-digitizer-cookie-consent-frontend.php:1178
 msgid "Cookie consent by Digitizer"
 msgstr "הסכמה לעוגיות מבית דיגיטייזר"
 

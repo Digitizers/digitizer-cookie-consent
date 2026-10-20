@@ -479,7 +479,7 @@ class Digitizer_Cookie_Consent_Admin {
 				<td>
 					<?php $this->switch_field( 'consent_mode', $o['consent_mode'] ); ?>
 					<p class="description"><?php esc_html_e( 'Tells Google tags (Analytics, Ads, Tag Manager) what the visitor allowed: analytics grants analytics storage, marketing grants ad storage, ad user data and ad personalization, functional grants personalization storage. These start denied until the visitor chooses; functionality and security storage, the essential kind, are always granted.', 'digitizer-cookie-consent' ); ?></p>
-					<p class="description"><?php esc_html_e( 'Google tags pasted in the "Scripts" tab still load only after consent. Google tags added any other way (Site Kit, a GTM plugin, the theme) load at once and follow these signals.', 'digitizer-cookie-consent' ); ?></p>
+					<p class="description"><?php esc_html_e( 'A Google tag tagged with a category (see the "Scripts" tab) still runs only after consent. Untagged Google tags (Site Kit, a GTM plugin, the theme) load at once and follow these signals.', 'digitizer-cookie-consent' ); ?></p>
 				</td>
 			</tr>
 			<tr>

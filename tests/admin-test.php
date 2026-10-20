@@ -42,6 +42,7 @@ dpt_test_ok( false !== strpos( $js, '.dpt-switch input[type="checkbox"]' ) && fa
 dpt_test_ok( false !== strpos( $js, "'.dpt-color'" ) && false !== strpos( $js, 'wpColorPicker' ), 'admin.js starts the color pickers' );
 dpt_test_ok( false !== strpos( $js, 'wp.media' ) && false !== strpos( $js, 'bg_image_url' ), 'and the background image picker' );
 $css = (string) file_get_contents( dirname( __DIR__ ) . '/assets/css/admin.css' );
+dpt_test_ok( 1 === preg_match( '/\.dpt-switch input:focus-visible \+ \.dpt-switch-slider\s*\{[^}]*outline:/', $css ), 'a focused settings switch shows a focus ring' );
 foreach ( array( '.dpt-layout', '.dpt-panel', '.dpt-form', '.dpt-actions', '.dpt-image-picker', '.dpt-lang-manager', '.dpt-sidebar', '.dpt-switch', '.dpt-preview-box' ) as $sel ) {
 	dpt_test_ok( false !== strpos( $css, $sel ), "admin.css carries $sel" );
 }
@@ -53,6 +54,9 @@ ob_start(); $tab->invoke( $admin, Digitizer_Cookie_Consent_Settings::all() ); $s
 dpt_test_ok( false === strpos( $scripts_tab, '<textarea' ) && false !== strpos( $scripts_tab, 'data-dpt-cb-category=&quot;analytics&quot;' ), 'the Scripts tab has no code field, and shows how to tag a script' );
 $src = (string) file_get_contents( dirname( __DIR__ ) . '/includes/class-digitizer-cookie-consent-admin.php' );
 dpt_test_ok( false === strpos( $src, 'scripts_functional' ) && false === strpos( $src, 'block_scripts' ) && false === stripos( $src, '<script' ), 'the screen has no snippet fields, and no literal script tag' );
+
+preg_match_all( "/esc_html_e\\( '([^']*(?:\\\\'[^']*)*)'/", $src, $strings );
+dpt_test_eq( preg_grep( '/past(e|ed|ing)\\b/i', $strings[1] ), array(), 'no text on the screen speaks of pasting code: the plugin stores none' );
 
 /* A site that moved from Digitizer Pro Tools with pasted snippets: shown them, read-only, until it says they are moved. */
 $moved = function () use ( $admin ) { ob_start(); $admin->moved_scripts_notice(); return (string) ob_get_clean(); };
