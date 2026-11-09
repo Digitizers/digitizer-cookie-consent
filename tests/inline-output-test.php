@@ -12,7 +12,16 @@ $GLOBALS['dpt_stub_filters'] = array();
 $f = new Digitizer_Cookie_Consent_Frontend();
 dpt_test_ok( dpt_stub_has_filter( 'wp_head' ), 'the precheck is hooked to wp_head' );
 ob_start(); $f->inject_inline_consent_check(); $head = (string) ob_get_clean();
-dpt_test_ok( 1 === preg_match( '#<script id="digitizer-cookie-consent-precheck" data-no-defer data-cfasync="false">#', $head ), 'the precheck goes through wp_print_inline_script_tag(), keeping the attributes that stop WP Rocket and Cloudflare deferring it' );
+dpt_test_ok( 1 === preg_match( '#<script id="digitizer-cookie-consent-precheck" type="application/javascript" data-no-defer data-cfasync="false">#', $head ), 'the precheck goes through wp_print_inline_script_tag(), keeping the attributes that stop WP Rocket and Cloudflare deferring it' );
+// Flying Scripts delays every script[!type] / script[type='text/javascript']
+// whose text holds one of its keywords (gtag, say) until a user interaction,
+// with no exclusion: on a live site it held the precheck back, so the purge
+// and the Consent Mode defaults ran only after a click (DPT #80). An explicit
+// JavaScript type the browser runs, and that selector skips - also on themes
+// without html5 script support, where core would add text/javascript.
+preg_match_all( '#<script\b([^>]*)>#', $head, $tags );
+$caught = array_filter( $tags[1], function ( $atts ) { return ! preg_match( '/\btype=/', $atts ) || preg_match( '/\btype=["\']text\/javascript["\']/', $atts ); } );
+dpt_test_eq( array_values( $caught ), array(), 'no script in the head output matches Flying Scripts\' selector' );
 dpt_test_ok( false === strpos( $head, '<style' ), 'no raw <style> in the head' );
 dpt_test_ok( isset( $GLOBALS['dpt_stub_inline_styles']['digitizer-cookie-consent-precheck'] ) && false !== strpos( implode( '', $GLOBALS['dpt_stub_inline_styles']['digitizer-cookie-consent-precheck'] ), 'html[data-dpt-cb-resolved="1"] #dpt-cb-banner' ), 'the CSS that hides the banner for a visitor who answered is an inline style on its own handle' );
 
