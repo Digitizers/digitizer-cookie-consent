@@ -36,6 +36,8 @@ Colors, fonts (or Elementor's global font), sizes, corner radius, positions, but
 
 This plugin gives you the tools - categories, blocking until consent, a reject button as prominent as accept, a way to withdraw consent. Whether a particular site meets the law that applies to it depends on what that site does. Check with your own legal adviser.
 
+Built and maintained by [Digitizer](https://www.digitizer.co.il/), a WordPress studio.
+
 == External services ==
 
 None. The plugin sends nothing anywhere. Google's tags, if you use them, are your site's own, loaded as you configured them.

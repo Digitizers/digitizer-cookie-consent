@@ -60,10 +60,10 @@ $f = new Digitizer_Cookie_Consent_Frontend();
 $m = new ReflectionMethod( 'Digitizer_Cookie_Consent_Frontend', 'render_banner_markup' );
 if ( PHP_VERSION_ID < 80100 ) { $m->setAccessible( true ); }
 ob_start(); $m->invoke( $f, Digitizer_Cookie_Consent_Settings::all(), Digitizer_Cookie_Consent_Settings::get_texts( 'en' ), 'en', 'ltr' ); $html = (string) ob_get_clean();
-dpt_test_ok( false === strpos( $html, 'digitizer.studio' ), 'no credit unless switched on' );
+dpt_test_ok( false === strpos( $html, 'dpt-cb-credit' ), 'no credit unless switched on' );
 $GLOBALS['dpt_stub_options']['digitizer_cookie_consent']['credit'] = '1';
 ob_start(); $m->invoke( $f, Digitizer_Cookie_Consent_Settings::all(), Digitizer_Cookie_Consent_Settings::get_texts( 'en' ), 'en', 'ltr' ); $html = (string) ob_get_clean();
-dpt_test_ok( 1 === preg_match( '#<p class="dpt-cb-credit"><a href="https://www\.digitizer\.studio" target="_blank" rel="noopener">Cookie consent by Digitizer</a></p>#', $html ), 'switched on: one line under the buttons' );
+dpt_test_ok( 1 === preg_match( '#<p class="dpt-cb-credit"><a href="https://www\.digitizer\.co\.il/" target="_blank" rel="noopener">Cookie consent by Digitizer</a></p>#', $html ), 'switched on: one line under the buttons' );
 
 /* Every hook and the shortcode carry the plugin's full prefix (wp.org: no prefix under 5 characters). Digitizer Pro Tools bridges its old names. */
 $src = '';
