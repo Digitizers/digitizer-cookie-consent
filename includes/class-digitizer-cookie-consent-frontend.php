@@ -1198,7 +1198,7 @@ class Digitizer_Cookie_Consent_Frontend {
 					</div>
 					<?php if ( '1' === $o['credit'] ) : ?>
 						<?php // Opt-in only (directory guideline 10): off unless the site switched it on. ?>
-						<p class="dpt-cb-credit"><a href="https://www.digitizer.studio" target="_blank" rel="noopener"><?php esc_html_e( 'Cookie consent by Digitizer', 'digitizer-cookie-consent' ); ?></a></p>
+						<p class="dpt-cb-credit"><a href="https://www.digitizer.co.il/" target="_blank" rel="noopener"><?php esc_html_e( 'Cookie consent by Digitizer', 'digitizer-cookie-consent' ); ?></a></p>
 					<?php endif; ?>
 				</div>
 
