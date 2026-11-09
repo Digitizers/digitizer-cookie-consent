@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       Digitizer Cookie Consent
- * Plugin URI:        https://github.com/Digitizers/digitizer-cookie-consent
+ * Plugin URI:        https://www.digitizer.co.il/digitizer-pro-tools/
  * Description:       A cookie consent banner for Hebrew and multilingual sites: categories, scripts blocked until consent, Google Consent Mode v2, the WP Consent API, and the cookies of a refused category deleted. Nothing is sent anywhere.
  * Version:           1.0.3
  * Requires at least: 5.7
