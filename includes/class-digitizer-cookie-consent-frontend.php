@@ -457,11 +457,15 @@ class Digitizer_Cookie_Consent_Frontend {
 
 		// First in <head>. data-no-defer and data-cfasync="false" keep WP
 		// Rocket and Cloudflare Rocket Loader from deferring it: it must run
-		// before any tag reads consent.
+		// before any tag reads consent. The explicit type keeps it out of
+		// Flying Scripts, which delays any untyped or text/javascript script
+		// holding one of its keywords (gtag, say) until a user interaction,
+		// and has no exclusion.
 		wp_print_inline_script_tag(
 			$js,
 			array(
 				'id'            => 'digitizer-cookie-consent-precheck',
+				'type'          => 'application/javascript',
 				'data-no-defer' => true,
 				'data-cfasync'  => 'false',
 			)
