@@ -79,4 +79,15 @@ setCookie("dpt_consent","new",180);process.stdout.write(JSON.stringify(jar.map(f
 } else {
 	dpt_test_ok( false, 'setCookie() found and node available' );
 }
+/* WP Rocket Remove Unused CSS stripped the stylesheet, so the banner rendered
+   unstyled at the page bottom and nobody could consent (DPT #79). */
+$GLOBALS['dpt_stub_filters'] = array();
+$f = new Digitizer_Cookie_Consent_Frontend();
+dpt_test_ok( dpt_stub_has_filter( 'rocket_rucss_external_exclusions' ) && dpt_stub_has_filter( 'rocket_rucss_inline_atts_exclusions' ), 'the banner opts out of WP Rocket\'s unused-CSS removal' );
+$ext = apply_filters( 'rocket_rucss_external_exclusions', array( 'theme.css' ) );
+dpt_test_ok( in_array( 'theme.css', $ext, true ) && in_array( 'digitizer-cookie-consent/assets/css/frontend.css', $ext, true ), 'its stylesheet stays loaded as a file, beside what was excluded already' );
+$in = apply_filters( 'rocket_rucss_inline_atts_exclusions', 'not-an-array' );
+dpt_test_ok( is_array( $in ) && in_array( 'digitizer-cookie-consent', $in, true ), 'and its inline styles (digitizer-cookie-consent-inline-css, -precheck-inline-css) are kept' );
+$GLOBALS['dpt_stub_filters'] = array();
+
 exit( dpt_test_summary() > 0 ? 1 : 0 );

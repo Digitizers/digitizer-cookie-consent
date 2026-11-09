@@ -4,7 +4,7 @@ Tags: cookies, consent, privacy, gdpr, cookie banner
 Requires at least: 5.7
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -84,6 +84,9 @@ Yes, by default: the choice is stored on the parent domain, so www, the bare dom
 4. The settings screen, under Settings > Cookie Consent, with a live preview of the banner.
 
 == Changelog ==
+
+= 1.0.2 =
+* With WP Rocket's Remove Unused CSS on, the banner's stylesheet and inline styles are kept out of it. Before, the banner could render unstyled at the bottom of the page, where visitors did not see it to consent.
 
 = 1.0.1 =
 * A tall banner - long texts, or the preferences list on a short or landscape screen - stays on screen and scrolls inside itself.
