@@ -1,5 +1,5 @@
 === Digitizer Cookie Consent ===
-Contributors: benkalsky
+Contributors: digitizers, benkalsky
 Tags: cookies, consent, privacy, gdpr, cookie banner
 Requires at least: 5.7
 Tested up to: 7.1
