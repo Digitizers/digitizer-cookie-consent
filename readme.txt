@@ -4,7 +4,7 @@ Tags: cookies, consent, privacy, gdpr, cookie banner
 Requires at least: 5.7
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.3
+Stable tag: 1.0.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -86,6 +86,9 @@ Yes, by default: the choice is stored on the parent domain, so www, the bare dom
 4. The settings screen, under Settings > Cookie Consent, with a live preview of the banner.
 
 == Changelog ==
+
+= 1.0.4 =
+* Credits Digitizer in the readme, with a link to the Digitizer Pro Tools page, and lists the Digitizer account as a contributor. The optional banner credit now links to digitizer.co.il. No functional change.
 
 = 1.0.3 =
 * The script at the top of the page - which deletes a refused category's cookies, sets the Google Consent Mode defaults and hides the banner for a visitor who already answered - now declares its type, so optimisation plugins such as Flying Scripts no longer hold it back until the visitor clicks. Before, a cookie could survive a withdrawal.
